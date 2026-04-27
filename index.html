@@ -1,0 +1,1621 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Wolfflix Engine - The Office A2 (Time Prank)</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- React & ReactDOM -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+    
+    <!-- Babel for JSX compilation -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&family=Press+Start+2P&display=swap');
+        
+        body { font-family: 'Inter', sans-serif; background-color: #0f172a; color: #f8fafc; overflow: hidden; }
+
+        .font-retro { font-family: 'Press Start 2P', monospace; }
+
+        /* RPG Backgrounds */
+        .office-bg {
+            background-color: #e2e8f0;
+            background-image: url("https://www.transparenttextures.com/patterns/cubes.png");
+            color: #0f172a;
+        }
+
+        /* --- BATTLE ANIMATIONS --- */
+        @keyframes rollDice {
+            0% { transform: rotate(0deg) scale(1); }
+            25% { transform: rotate(90deg) scale(1.1); }
+            50% { transform: rotate(180deg) scale(1.2); }
+            75% { transform: rotate(270deg) scale(1.1); }
+            100% { transform: rotate(360deg) scale(1); }
+        }
+        .animate-roll { animation: rollDice 0.4s ease-out; }
+
+        @keyframes floatItem {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-8px) rotate(3deg); }
+        }
+        .animate-float { animation: floatItem 3s infinite ease-in-out; }
+
+        @keyframes heroTackle {
+            0% { transform: translate(0, 0) scale(1); }
+            40% { transform: translate(80px, -40px) scale(1.1); }
+            60% { transform: translate(100px, -50px) scale(1.1); }
+            100% { transform: translate(0, 0) scale(1); }
+        }
+        .anim-hero-tackle { animation: heroTackle 0.5s ease-in-out forwards; }
+
+        @keyframes enemyTackle {
+            0% { transform: translate(0, 0) scale(1); }
+            40% { transform: translate(-80px, 40px) scale(1.1); }
+            60% { transform: translate(-100px, 50px) scale(1.1); }
+            100% { transform: translate(0, 0) scale(1); }
+        }
+        .anim-enemy-tackle { animation: enemyTackle 0.5s ease-in-out forwards; }
+
+        @keyframes magicCast {
+            0% { transform: scale(1); filter: brightness(1); }
+            50% { transform: scale(1.2); filter: brightness(1.5) drop-shadow(0 0 20px #38bdf8); }
+            100% { transform: scale(1); filter: brightness(1); }
+        }
+        .anim-hero-magic { animation: magicCast 0.5s ease-in-out forwards; }
+
+        @keyframes damageShake {
+            0%, 100% { transform: translateX(0); filter: brightness(1); }
+            20% { transform: translateX(-10px); filter: brightness(0.5) sepia(1) hue-rotate(-50deg) saturate(5); }
+            40% { transform: translateX(10px); filter: brightness(0.5) sepia(1) hue-rotate(-50deg) saturate(5); }
+            60% { transform: translateX(-10px); filter: brightness(0.5) sepia(1) hue-rotate(-50deg) saturate(5); }
+            80% { transform: translateX(10px); filter: brightness(0.5) sepia(1) hue-rotate(-50deg) saturate(5); }
+        }
+        .anim-damage { animation: damageShake 0.4s ease-in-out forwards; }
+
+        @keyframes projectileFly {
+            0% { top: 60%; left: 20%; transform: scale(0.5); opacity: 1; }
+            90% { top: 20%; left: 70%; transform: scale(2); opacity: 1; }
+            100% { top: 20%; left: 70%; transform: scale(3); opacity: 0; }
+        }
+        .animate-projectile { animation: projectileFly 0.4s ease-in forwards; position: absolute; z-index: 50; }
+
+        .pixelated-emoji {
+            image-rendering: pixelated;
+            filter: drop-shadow(3px 3px 0px rgba(0,0,0,0.5));
+        }
+
+        /* Standard Cinematic Masks */
+        .mask-image-gradient { 
+            mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 40%, rgba(0,0,0,0) 100%); 
+            -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 40%, rgba(0,0,0,0) 100%); 
+        }
+
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(56, 189, 248, 0.4); border-radius: 10px; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideInRight { from { opacity: 0; transform: translateX(30px); } to { opacity: 1; transform: translateX(0); } }
+        @keyframes slideInLeft { from { opacity: 0; transform: translateX(-30px); } to { opacity: 1; transform: translateX(0); } }
+        @keyframes slideInDown { from { opacity: 0; transform: translateY(-20px) translateX(-50%); } to { opacity: 1; transform: translateY(0) translateX(-50%); } }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes pop { 0% { transform: scale(0.8); opacity: 0;} 100% { transform: scale(1); opacity: 1;} }
+        @keyframes popIn { 0% { transform: scale(0.5) rotate(-15deg); opacity: 0; } 80% { transform: scale(1.1) rotate(-5deg); opacity: 1; } 100% { transform: scale(1) rotate(-5deg); opacity: 1; } }
+        @keyframes shake { 0%, 100% {transform: translateX(0);} 25% {transform: translateX(-5px);} 75% {transform: translateX(5px);} }
+        
+        .animate-fadeIn { animation: fadeIn 0.5s ease-out forwards; }
+        .animate-slideInRight { animation: slideInRight 0.3s ease-out forwards; }
+        .animate-slideInLeft { animation: slideInLeft 0.3s ease-out forwards; }
+        .animate-slideInDown { animation: slideInDown 0.3s ease-out forwards; }
+        .animate-slideDown { animation: slideDown 0.3s ease-out forwards; }
+        .animate-pop { animation: pop 0.2s ease-out forwards; }
+        .animate-popIn { animation: popIn 0.3s ease-out forwards; }
+        .animate-shake { animation: shake 0.5s ease-in-out forwards; }
+    </style>
+</head>
+<body>
+
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+
+        // --- ASSETS & CONSTANTS ---
+        const YOUTUBE_ID = "b1RoMfysruQ"; 
+        const BG_OFFICE = "https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=2000&auto=format&fit=crop";
+        const BG_DESK = "https://cloudfront-us-east-1.images.arcpublishing.com/estadao/SGMPKUUKHZNK5I52G645P5CVH4.jpg";
+        const BG_CLOCK = "https://images.unsplash.com/photo-1501139083538-0139583c060f?q=80&w=2000&auto=format&fit=crop"; 
+        const BG_COVER = "https://variety.com/wp-content/uploads/2025/09/TCDOFFI_EC059-e1757011016199.jpg?w=1000&h=667&crop=1";
+
+        // --- REUSABLE UI ---
+        const Icon = ({ name, size = 24, className = "" }) => (
+            <i className={`fa-solid fa-${name} ${className}`} style={{ fontSize: size }}></i>
+        );
+        const IconReg = ({ name, size = 24, className = "" }) => (
+            <i className={`fa-regular fa-${name} ${className}`} style={{ fontSize: size }}></i>
+        );
+
+        const GlassCard = ({ children, className = "", onClick = null }) => (
+            <div 
+                onClick={onClick}
+                className={`bg-[#1e293b]/90 backdrop-blur-xl border border-white/10 rounded-2xl p-6 shadow-2xl ${onClick ? 'cursor-pointer hover:bg-white/10 transition-all active:scale-95' : ''} ${className}`}
+            >
+                {children}
+            </div>
+        );
+
+        const Button = ({ onClick, children, primary, disabled, className = "", variant = "default", title }) => {
+            const baseStyle = "font-bold rounded-xl px-6 py-3 transition-all duration-300 transform flex items-center justify-center gap-2";
+            let colorStyle = "";
+            if (variant === "netflix-white") colorStyle = "bg-white hover:bg-slate-200 text-slate-900";
+            else if (variant === "netflix-dark") colorStyle = "bg-[#334155] hover:bg-[#475569] text-white border border-white/10";
+            else if (primary) colorStyle = "bg-[#0ea5e9] hover:bg-[#0284c7] text-white shadow-[0_0_20px_rgba(14,165,233,0.4)]";
+            else colorStyle = "bg-white/10 hover:bg-white/20 text-white border border-white/20";
+
+            return (
+                <button onClick={onClick} disabled={disabled} title={title} className={`${baseStyle} ${colorStyle} ${disabled ? "opacity-30 cursor-not-allowed" : "hover:scale-105 active:scale-95"} ${className}`}>
+                {children}
+                </button>
+            );
+        };
+
+        // ==========================================
+        // 🛠️ TEACHER TOOLSET
+        // ==========================================
+        const TeacherTools = ({ addXp }) => {
+            const [isOpen, setIsOpen] = useState(false);
+            const [whiteboardOpen, setWhiteboardOpen] = useState(false);
+            const [timerSeconds, setTimerSeconds] = useState(0);
+            const [showPraise, setShowPraise] = useState(false);
+            const timerRef = useRef(null);
+
+            useEffect(() => {
+                if (timerSeconds > 0) timerRef.current = setTimeout(() => setTimerSeconds(t => t - 1), 1000);
+                return () => clearTimeout(timerRef.current);
+            }, [timerSeconds]);
+
+            const triggerPraise = () => {
+                addXp(50);
+                setShowPraise(true);
+                setTimeout(() => setShowPraise(false), 2500);
+            };
+
+            return (
+                <React.Fragment>
+                {showPraise && (
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center pointer-events-none animate-popIn">
+                    <div className="bg-gradient-to-r from-emerald-400 to-teal-500 text-white font-black text-6xl md:text-8xl px-12 py-8 rounded-3xl shadow-[0_0_100px_rgba(16,185,129,0.8)] border-4 border-white transform rotate-[-5deg] tracking-tighter uppercase">
+                        PROMOTED! <br/><span className="text-4xl text-teal-100 block text-center mt-2">+50 XP</span>
+                    </div>
+                    </div>
+                )}
+                {timerSeconds > 0 && (
+                    <div className="fixed top-6 left-1/2 transform -translate-x-1/2 z-50 bg-[#0ea5e9] text-white font-mono font-black text-4xl px-8 py-3 rounded-full shadow-[0_0_30px_rgba(14,165,233,0.6)] animate-pulse flex items-center justify-center">
+                    00:{timerSeconds.toString().padStart(2, '0')}
+                    </div>
+                )}
+                <div className="fixed top-6 left-6 z-[60] flex items-center gap-3">
+                    <button onClick={() => setIsOpen(!isOpen)} className={`w-14 h-14 rounded-full flex items-center justify-center transition-all shadow-2xl z-20 ${isOpen ? 'bg-[#2563eb]' : 'bg-[#0ea5e9] hover:scale-105'}`}>
+                        {isOpen ? <Icon name="xmark" size={28} className="text-white" /> : <Icon name="briefcase" size={28} className="text-white" />}
+                    </button>
+                    {isOpen && (
+                    <div className="flex gap-3 bg-[#0f172a]/95 backdrop-blur-md p-2.5 rounded-2xl border border-white/10 shadow-2xl z-10 pl-6 -ml-4 animate-slideInLeft">
+                        <button onClick={() => setWhiteboardOpen(!whiteboardOpen)} className="w-12 h-12 bg-[#1e293b] rounded-xl flex items-center justify-center hover:bg-[#334155] transition-colors"><Icon name="pencil" size={24} className="text-[#38bdf8]" /></button>
+                        <button onClick={() => setTimerSeconds(60)} className="w-12 h-12 bg-[#1e293b] rounded-xl flex items-center justify-center hover:bg-[#334155] transition-colors"><Icon name="clock" size={24} className="text-[#eab308]" /></button>
+                        <button onClick={triggerPraise} className="w-12 h-12 bg-[#1e293b] rounded-xl flex items-center justify-center hover:bg-[#334155] transition-colors"><Icon name="star" size={24} className="text-emerald-400" /></button>
+                    </div>
+                    )}
+                </div>
+                {whiteboardOpen && (
+                    <div className="fixed right-0 top-0 h-full w-[400px] bg-[#0f172a]/95 backdrop-blur-2xl border-l border-white/10 z-[70] p-6 shadow-2xl flex flex-col animate-slideInRight">
+                        <div className="flex justify-between items-center mb-6">
+                            <h3 className="text-white font-bold text-xl flex items-center gap-2"><Icon name="pencil" size={18} className="text-[#38bdf8]"/> Teacher Notes</h3>
+                            <button onClick={() => setWhiteboardOpen(false)} className="text-slate-400 hover:text-white"><Icon name="xmark" size={24}/></button>
+                        </div>
+                        <textarea className="flex-1 bg-white/5 border border-white/10 rounded-xl p-4 text-white text-lg font-mono focus:outline-none focus:border-[#0ea5e9] resize-none custom-scrollbar" placeholder="Type live notes, grammar examples, or vocabulary here..."></textarea>
+                    </div>
+                )}
+                </React.Fragment>
+            );
+        };
+
+        // ==========================================
+        // 💼 THE OFFICE BATTLE RPG (A2 Past Simple)
+        // ==========================================
+        const OfficeBattleRPG = ({ addXp, onComplete }) => {
+            const [gameState, setGameState] = useState('creation'); 
+            const [hero, setHero] = useState(null);
+            const [pos, setPos] = useState(0);
+            
+            const [enemy, setEnemy] = useState(null);
+            const [selectedAction, setSelectedAction] = useState(null);
+            const [currentQuestion, setCurrentQuestion] = useState(null);
+            
+            const [diceValue, setDiceValue] = useState(20);
+            const [isRolling, setIsRolling] = useState(false);
+            const [msg, setMsg] = useState("A wild problem appeared!");
+
+            // 🧠 Sistema de Deck de Perguntas (Sem repetição)
+            const ALL_QUESTIONS = [
+                { q: "What is the past tense of EAT?", opts: ["Eated", "Ate", "Eaten"], correct: 1 },
+                { q: "What is the past tense of FALL?", opts: ["Fell", "Falled", "Fallen"], correct: 0 },
+                { q: "What is the past tense of CHANGE?", opts: ["Chang", "Changed", "Changes"], correct: 1 },
+                { q: "What is the past tense of HAVE?", opts: ["Haved", "Had", "Has"], correct: 1 },
+                { q: "Make it negative: 'I ate pie.'", opts: ["I didn't ate pie.", "I don't ate pie.", "I didn't eat pie."], correct: 2 },
+                { q: "Make it negative: 'He fell asleep.'", opts: ["He didn't fall asleep.", "He didn't fell asleep.", "He wasn't fall asleep."], correct: 0 },
+                { q: "What is the past tense of BECOME?", opts: ["Becomed", "Became", "Becomes"], correct: 1 },
+                { q: "Complete: 'Yesterday, we ______ home early.'", opts: ["go", "goed", "went"], correct: 2 },
+                { q: "What is the past tense of SHOOT?", opts: ["Shooted", "Shot", "Shoots"], correct: 1 },
+                { q: "Complete: 'He ______ his computer clock.'", opts: ["changes", "changed", "change"], correct: 1 },
+                { q: "What does 'promptly' mean?", opts: ["Slowly", "Immediately", "Never"], correct: 1 },
+                { q: "Who is a 'horse doctor'?", opts: ["A horse with a PhD", "A veterinarian", "A bad doctor"], correct: 1 },
+                { q: "What do you call a scheduled meeting?", opts: ["An appointment", "A discussion", "A timeline"], correct: 0 },
+                { q: "Which one is an IRREGULAR verb?", opts: ["Work", "Change", "Eat"], correct: 2 },
+                { q: "Which one is a REGULAR verb?", opts: ["Have", "Play", "Fall"], correct: 1 },
+                { q: "Complete: 'Did you _____ the clock?'", opts: ["change", "changed", "changing"], correct: 0 },
+                { q: "Complete: 'Where _____ Michael go?'", opts: ["did", "do", "was"], correct: 0 },
+                { q: "If someone is 'asleep', they are...", opts: ["Working hard", "Not awake", "Eating pie"], correct: 1 },
+                { q: "Translate 'Pegadinha' to English.", opts: ["Joke", "Prank", "Lie"], correct: 1 },
+                { q: "Michael _____ a whole pie for lunch.", opts: ["had", "haved", "has"], correct: 0 }
+            ];
+            
+            const [questionDeck, setQuestionDeck] = useState([]);
+
+            useEffect(() => {
+                setQuestionDeck([...ALL_QUESTIONS].sort(() => Math.random() - 0.5));
+            }, []);
+
+            const [heroAnimClass, setHeroAnimClass] = useState('');
+            const [enemyAnimClass, setEnemyAnimClass] = useState('');
+            const [showProjectile, setShowProjectile] = useState(false);
+
+            const CLASSES = [
+                { id: 'prankster', name: 'The Prankster', emoji: '📎', maxHp: 100, color: 'text-blue-400', desc: "Clever and annoying.", 
+                  stats: { STR: 1, INT: 3, WIS: 2 },
+                  actions: [
+                      { name: 'Stapler Throw', type: 'attack', stat: 'STR', dmg: 20, desc: 'Physical attack.' },
+                      { name: 'Change Clock', type: 'magic', stat: 'INT', dmg: 35, desc: 'Confuses enemy.' }
+                  ]
+                },
+                { id: 'receptionist', name: 'The Receptionist', emoji: '☎️', maxHp: 90, color: 'text-pink-400', desc: "Controls communications.", 
+                  stats: { STR: 0, INT: 2, WIS: 4 },
+                  actions: [
+                      { name: 'Transfer Call', type: 'attack', stat: 'WIS', dmg: 25, desc: 'Emotional damage.' },
+                      { name: 'Coffee Break', type: 'heal', stat: 'WIS', dmg: -30, desc: 'Heal yourself.' }
+                  ]
+                },
+                { id: 'assistant', name: 'Assistant to the Manager', emoji: '🤓', maxHp: 120, color: 'text-yellow-500', desc: "Follows the rules.", 
+                  stats: { STR: 3, INT: 1, WIS: 1 },
+                  actions: [
+                      { name: 'Report to HR', type: 'magic', stat: 'INT', dmg: 30, desc: 'Devastating paperwork.' },
+                      { name: 'Beet Attack', type: 'attack', stat: 'STR', dmg: 20, desc: 'Farm strength.' }
+                  ]
+                }
+            ];
+
+            const REGIONS = [
+                { name: "The Break Room", enemy: { name: "Ringing Phone", maxHp: 60, hp: 60, emoji: "📱", dmg: 10, xp: 200 } },
+                { name: "Sales Desk", enemy: { name: "Angry Client", maxHp: 100, hp: 100, emoji: "🤬", dmg: 18, xp: 300 } },
+                { name: "Manager's Office", enemy: { name: "Sleepy Boss", maxHp: 160, hp: 160, emoji: "😴", dmg: 25, xp: 500 } }
+            ];
+
+            const selectHero = (c) => {
+                setHero({ ...c, hp: c.maxHp });
+                setGameState('map');
+            };
+
+            const enterEncounter = () => {
+                const currentEnemy = REGIONS[pos].enemy;
+                setEnemy({ ...currentEnemy });
+                setMsg(`A wild ${currentEnemy.name.toUpperCase()} appeared!`);
+                setGameState('encounter');
+                setTimeout(() => setGameState('battle_menu'), 2500);
+            };
+
+            const handleActionClick = (action) => {
+                setSelectedAction(action);
+
+                let deck = [...questionDeck];
+                if (deck.length === 0) deck = [...ALL_QUESTIONS].sort(() => Math.random() - 0.5);
+                const nextQ = deck.shift();
+                
+                setQuestionDeck(deck);
+                setCurrentQuestion(nextQ);
+                setMsg(`To use ${action.name.toUpperCase()}, answer this:`);
+                setGameState('question');
+            };
+
+            const handleAnswer = (idx) => {
+                const isCorrect = (idx === currentQuestion.correct);
+                setGameState('rolling');
+                setIsRolling(true);
+
+                if(isCorrect) setMsg(`Correct! Rolling D20 for productivity...`);
+                else setMsg(`Wrong answer! The action fails!`);
+
+                let ticks = 0;
+                const interval = setInterval(() => {
+                    setDiceValue(Math.floor(Math.random() * 20) + 1);
+                    ticks++;
+                    if (ticks > 15) {
+                        clearInterval(interval);
+                        setIsRolling(false);
+                        const finalRoll = Math.floor(Math.random() * 20) + 1;
+                        setDiceValue(finalRoll);
+
+                        if (isCorrect) {
+                            setMsg(`Rolled a ${finalRoll}! ${hero.name} used ${selectedAction.name}!`);
+                            executeHeroAttack(finalRoll);
+                        } else {
+                            setMsg(`Your action missed...`);
+                            setTimeout(() => executeEnemyTurn(hero.hp), 2000);
+                        }
+                    }
+                }, 60);
+            };
+
+            const executeHeroAttack = (rollResult) => {
+                setGameState('anim_attack');
+                const statMod = hero.stats[selectedAction.stat];
+                let damage = 0;
+
+                if (selectedAction.type === 'attack') setHeroAnimClass('anim-hero-tackle');
+                else if (selectedAction.type === 'magic') { setHeroAnimClass('anim-hero-magic'); setShowProjectile(true); }
+
+                setTimeout(() => {
+                    if (selectedAction.type === 'heal') {
+                        const healAmt = Math.abs(selectedAction.dmg) + (statMod * 2) + rollResult;
+                        const newHp = Math.min(hero.maxHp, hero.hp + healAmt);
+                        setHero(h => ({...h, hp: newHp}));
+                        setMsg(`${hero.name} rested and healed ${healAmt} HP!`);
+                    } else {
+                        setEnemyAnimClass('anim-damage');
+                        damage = selectedAction.dmg + (statMod * 2) + rollResult;
+                        const newEnemyHp = Math.max(0, enemy.hp - damage);
+                        setEnemy(e => ({...e, hp: newEnemyHp}));
+                        setMsg(`Very effective! Dealt ${damage} damage!`);
+                    }
+
+                    setTimeout(() => {
+                        setHeroAnimClass(''); setEnemyAnimClass(''); setShowProjectile(false);
+                        if (enemy.hp - damage <= 0) {
+                            setMsg(`${enemy.name} was fired!`);
+                            setTimeout(() => {
+                                addXp(enemy.xp);
+                                setGameState('victory');
+                            }, 2000);
+                        } else {
+                            executeEnemyTurn(hero.hp);
+                        }
+                    }, 1500);
+
+                }, selectedAction.type === 'magic' ? 400 : 250);
+            };
+
+            const executeEnemyTurn = (playerHpStart) => {
+                setGameState('anim_enemy');
+                setMsg(`${enemy.name} is retaliating!`);
+                
+                setTimeout(() => {
+                    setEnemyAnimClass('anim-enemy-tackle');
+                    setTimeout(() => {
+                        setHeroAnimClass('anim-damage');
+                        const damage = enemy.dmg + Math.floor(Math.random() * 8);
+                        const finalHp = Math.max(0, playerHpStart - damage);
+                        setHero(h => ({...h, hp: finalHp}));
+                        setMsg(`Took ${damage} stress damage!`);
+
+                        setTimeout(() => {
+                            setEnemyAnimClass(''); setHeroAnimClass('');
+                            if (finalHp <= 0) setGameState('gameover');
+                            else {
+                                setMsg(`What will ${hero.name.toUpperCase()} do?`);
+                                setGameState('battle_menu');
+                            }
+                        }, 1500);
+                    }, 250);
+                }, 1000);
+            };
+
+            const nextRegion = () => {
+                if (pos === REGIONS.length - 1) onComplete(); 
+                else { setPos(pos + 1); setGameState('map'); }
+            };
+
+            const revive = () => {
+                addXp(-100); 
+                setHero(h => ({ ...h, hp: h.maxHp }));
+                setGameState('map');
+            };
+
+            if (gameState === 'creation') {
+                return (
+                    <div className="w-full h-full flex flex-col items-center justify-center p-8 animate-fadeIn relative">
+                        <div className="absolute inset-0 bg-cover bg-center opacity-10" style={{ backgroundImage: `url(${BG_OFFICE})` }}></div>
+                        <div className="z-10 w-full max-w-6xl text-center">
+                            <h2 className="text-5xl md:text-6xl font-black text-white tracking-widest mb-2 uppercase">Choose Your Employee</h2>
+                            <p className="text-slate-400 mb-12 text-xl">Each role has different stats for the A2 Grammar Battles.</p>
+
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                                {CLASSES.map(c => (
+                                    <GlassCard key={c.id} onClick={() => selectHero(c)} className="border-white/10 hover:border-[#0ea5e9] hover:-translate-y-2 transition-all cursor-pointer bg-[#1e293b]/90 flex flex-col items-center text-center p-8">
+                                        <div className={`text-7xl mb-6 pixelated-emoji`}>{c.emoji}</div>
+                                        <h3 className={`text-2xl font-black uppercase mb-3 ${c.color}`}>{c.name}</h3>
+                                        <p className="text-slate-400 text-base mb-8 h-12">{c.desc}</p>
+                                        <div className="w-full flex flex-col gap-3">
+                                            {c.actions.map((act, i) => (
+                                                <div key={i} className="bg-black/30 p-3 rounded-lg border border-white/5 text-sm font-mono text-slate-300 flex justify-between items-center uppercase">
+                                                    <span><Icon name={act.type === 'attack' ? 'briefcase' : act.type === 'heal' ? 'coffee' : 'bolt'} className="mr-2 text-xs"/>{act.name}</span>
+                                                    <span className={act.type === 'heal' ? 'text-emerald-400 font-bold' : 'text-red-400 font-bold'}>{Math.abs(act.dmg)} PWR</span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </GlassCard>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                );
+            }
+
+            return (
+                <div className="w-full h-full flex flex-col items-center justify-center p-4 md:p-8 animate-fadeIn relative">
+                    <div className="absolute inset-0 bg-cover bg-center opacity-10" style={{ backgroundImage: `url(${BG_OFFICE})` }}></div>
+                    <div className="z-10 w-full max-w-5xl h-full flex flex-col items-center justify-center">
+                        <div className="w-full max-w-4xl bg-[#1e293b]/90 backdrop-blur-xl border border-white/10 rounded-2xl p-4 mb-6 shadow-2xl flex flex-col md:flex-row items-center justify-between gap-4">
+                            <div className="flex items-center gap-4">
+                                <div className={`text-5xl pixelated-emoji`}>{hero.emoji}</div>
+                                <div className="text-left">
+                                    <h3 className={`text-xl font-black uppercase ${hero.color} leading-none`}>{hero.name}</h3>
+                                    <p className="text-slate-400 text-xs tracking-widest uppercase mt-1">Dunder Mifflin Branch</p>
+                                </div>
+                            </div>
+                            <div className="flex-1 max-w-sm w-full px-4">
+                                <div className="flex justify-between text-xs font-bold mb-1">
+                                    <span className="text-emerald-400">MOTIVATION (HP)</span>
+                                    <span className="text-white">{hero.hp} / {hero.maxHp}</span>
+                                </div>
+                                <div className="w-full h-4 bg-slate-900 rounded-full overflow-hidden border border-white/10">
+                                    <div className="h-full bg-emerald-500 transition-all duration-500 shadow-[0_0_10px_rgba(16,185,129,0.8)]" style={{ width: `${(hero.hp/hero.maxHp)*100}%` }}></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="w-full max-w-4xl flex-1 flex flex-col overflow-hidden">
+                            {gameState === 'map' && (
+                                <div className="flex-1 office-bg rounded-3xl relative p-8 shadow-2xl flex flex-col items-center justify-center overflow-hidden border border-slate-300">
+                                    <h3 className="absolute top-8 text-3xl font-black uppercase text-slate-800 tracking-tight">Office Floorplan</h3>
+                                    <div className="relative z-10 flex w-full justify-between items-center px-12 mt-4">
+                                        <div className="absolute top-1/2 left-16 right-16 h-1 border-t-4 border-dashed border-slate-400 -z-10"></div>
+                                        {REGIONS.map((region, i) => (
+                                            <div key={i} className="relative flex flex-col items-center">
+                                                <div className={`w-24 h-24 rounded-full flex items-center justify-center transition-all duration-500 border-4 z-10 shadow-lg bg-white
+                                                    ${pos === i ? 'border-[#0ea5e9] shadow-[0_0_30px_rgba(14,165,233,0.5)] scale-110' : 
+                                                    pos > i ? 'border-emerald-500' : 'border-slate-300'}`}>
+                                                    {pos === i ? <span className="text-5xl animate-float pixelated-emoji">{hero.emoji}</span> : pos > i ? <Icon name="check" className="text-emerald-500" size={32} /> : <Icon name="building" className="text-slate-300" size={32} />}
+                                                </div>
+                                                <p className={`mt-6 font-black text-sm md:text-base uppercase text-center w-36 leading-tight ${pos === i ? 'text-[#0ea5e9]' : 'text-slate-600'}`}>{region.name}</p>
+                                            </div>
+                                        ))}
+                                    </div>
+                                    <Button primary onClick={enterEncounter} className="absolute bottom-10 py-4 px-10 text-xl uppercase font-black tracking-widest shadow-xl">
+                                        <Icon name="forward" /> Enter {REGIONS[pos].name}
+                                    </Button>
+                                </div>
+                            )}
+
+                            {gameState !== 'map' && gameState !== 'victory' && gameState !== 'gameover' && (
+                                <div className="flex-1 flex flex-col gap-4">
+                                    <div className="flex-1 bg-white rounded-2xl border-4 border-slate-300 relative overflow-hidden shadow-2xl flex flex-col">
+                                        <div className="absolute inset-0 bg-cover bg-center opacity-40" style={{ backgroundImage: `url(${BG_DESK})` }}></div>
+                                        
+                                        <div className="absolute top-6 left-6 bg-white border-4 border-slate-800 rounded-xl p-3 w-64 shadow-lg z-20">
+                                            <h4 className="font-retro text-slate-900 text-[10px] uppercase mb-2">{enemy?.name} <span className="float-right text-slate-500">Lv{(pos+1)*10}</span></h4>
+                                            <div className="w-full bg-slate-200 rounded-full h-3 border-2 border-slate-400 flex justify-end">
+                                                <div className="h-full bg-red-500 rounded-full transition-all duration-500" style={{ width: `${(enemy?.hp/enemy?.maxHp)*100}%` }}></div>
+                                            </div>
+                                        </div>
+
+                                        <div className="flex-1 flex justify-between items-center px-16 relative">
+                                            <div className={`text-[120px] pixelated-emoji z-10 transition-transform ${heroAnimClass}`}>{hero?.emoji}</div>
+                                            {showProjectile && <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 bg-blue-400 rounded-full shadow-[0_0_30px_#60a5fa] animate-projectile flex items-center justify-center text-2xl">📄</div>}
+                                            <div className={`text-[120px] pixelated-emoji z-10 transition-transform ${enemyAnimClass}`}>{enemy?.emoji}</div>
+                                        </div>
+
+                                        <div className="absolute bottom-6 right-6 bg-white border-4 border-slate-800 rounded-xl p-3 w-72 shadow-lg z-20">
+                                            <h4 className="font-retro text-slate-900 text-[10px] uppercase mb-2">{hero?.name} <span className="float-right text-slate-500">Lv99</span></h4>
+                                            <div className="w-full bg-slate-200 rounded-full h-3 border-2 border-slate-400 flex justify-end mb-1">
+                                                <div className="h-full bg-emerald-500 rounded-full transition-all duration-500" style={{ width: `${(hero?.hp/hero?.maxHp)*100}%` }}></div>
+                                            </div>
+                                            <p className="text-right text-slate-900 font-retro text-[10px]">{hero?.hp} / {hero?.maxHp}</p>
+                                        </div>
+                                    </div>
+
+                                    <div className="min-h-[14rem] bg-white border-4 border-slate-400 rounded-2xl shadow-2xl flex flex-col md:flex-row overflow-hidden w-full">
+                                        <div className={`p-6 border-b-4 md:border-b-0 md:border-r-4 border-slate-300 flex items-center justify-center text-center bg-slate-100 ${gameState === 'battle_menu' || gameState === 'question' ? 'md:w-2/5' : 'w-full'} transition-all relative`}>
+                                            <p className="font-retro text-slate-900 text-[10px] sm:text-xs leading-relaxed uppercase">{msg}</p>
+                                            {gameState === 'rolling' && (
+                                                <div className={`absolute right-10 top-1/2 -translate-y-1/2 w-24 h-24 bg-white rounded-xl flex items-center justify-center border-4 border-slate-800 shadow-lg ${isRolling ? 'animate-roll' : ''}`}>
+                                                    <span className="text-slate-900 text-4xl font-black font-retro">{diceValue}</span>
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {gameState === 'battle_menu' && (
+                                            <div className="md:w-3/5 grid grid-cols-1 sm:grid-cols-2 gap-3 p-4 bg-slate-200">
+                                                {hero.actions.map((act, i) => (
+                                                    <button key={i} onClick={() => handleActionClick(act)} className="bg-white border-4 border-slate-400 hover:border-[#0ea5e9] hover:bg-blue-50 rounded-lg font-retro text-[10px] md:text-[11px] uppercase text-slate-900 flex flex-col items-center justify-center p-3 active:scale-95 transition-transform shadow-sm">
+                                                        <span className="mb-2 text-center">{act.name}</span>
+                                                        <span className="text-[8px] md:text-[9px] text-slate-500">[{act.stat} Check]</span>
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        )}
+
+                                        {gameState === 'question' && (
+                                            <div className="md:w-3/5 flex flex-col gap-3 p-4 bg-slate-200 overflow-y-auto custom-scrollbar">
+                                                <p className="font-retro text-[10px] md:text-[11px] leading-snug text-blue-700 mb-2">{currentQuestion.q}</p>
+                                                {currentQuestion.opts.map((opt, i) => (
+                                                    <button key={i} onClick={() => handleAnswer(i)} className="bg-white border-4 border-slate-400 hover:border-emerald-500 hover:bg-emerald-50 rounded-lg font-retro text-[8px] md:text-[10px] uppercase text-slate-900 p-3 text-left active:scale-95 transition-all shadow-sm">
+                                                        {opt}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+
+                            {gameState === 'gameover' && (
+                                <GlassCard className="flex-1 flex flex-col items-center justify-center text-center animate-fadeIn border-red-900 bg-[#0f172a]">
+                                    <div className="text-8xl mb-6 pixelated-emoji">📉</div>
+                                    <h3 className="text-5xl font-black text-red-500 mb-4 tracking-widest uppercase">YOU WERE FIRED</h3>
+                                    <p className="text-slate-400 text-lg mb-8">Your motivation reached zero.</p>
+                                    <Button primary onClick={revive} className="py-4 px-10 text-xl uppercase font-black tracking-widest !bg-red-600 hover:!bg-red-700 text-white shadow-[0_0_20px_rgba(220,38,38,0.5)]">
+                                        Reapply for Job (Lose 100 XP) <Icon name="briefcase" />
+                                    </Button>
+                                </GlassCard>
+                            )}
+
+                            {gameState === 'victory' && (
+                                <GlassCard className="flex-1 flex flex-col items-center justify-center text-center bg-[#1e293b]/90 border-[#0ea5e9]/50 animate-popIn">
+                                    <div className="text-8xl mb-6 pixelated-emoji">📈</div>
+                                    <h3 className="text-5xl font-black text-white mb-4 tracking-widest uppercase">PROBLEM SOLVED</h3>
+                                    <p className="text-blue-200 text-xl font-medium mb-8">The office is peaceful again.</p>
+                                    <Button primary onClick={nextRegion} className="py-4 px-10 text-xl uppercase font-black tracking-widest">
+                                        Continue Work <Icon name="arrow-right" />
+                                    </Button>
+                                </GlassCard>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        // --- GENERIC SLIDE TEMPLATES ---
+
+        const TeacherGuideSlide = ({ startLesson, toggleFs, isFs }) => (
+            <div className="min-h-screen bg-[#0f172a] flex items-center justify-center p-8 relative overflow-hidden w-full">
+                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#0ea5e9] to-[#0284c7]"></div>
+                <div className="max-w-6xl w-full z-10 grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div className="lg:col-span-2 space-y-6">
+                    <div className="flex items-center gap-4 mb-8">
+                    <div className="bg-[#0ea5e9]/20 p-4 rounded-2xl border border-[#0ea5e9]/50"><Icon name="clipboard-check" size={40} className="text-[#0ea5e9]" /></div>
+                    <div>
+                        <h1 className="text-4xl font-black text-white uppercase tracking-tight">Teacher's Lounge</h1>
+                        <p className="text-[#38bdf8] font-bold tracking-widest text-sm uppercase mt-1">Classified Lesson Protocol v14.0</p>
+                    </div>
+                    </div>
+                    <GlassCard className="border-white/5">
+                    <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-2"><Icon name="crosshairs" className="text-[#0ea5e9]"/> Lesson Objective</h2>
+                    <p className="text-slate-300 text-lg leading-relaxed">
+                        This is a 60-minute immersive cinematic experience for <strong>A2 Level</strong>. Features include inductive learning for <strong>Simple Past & Irregular Verbs</strong>, corporate vocabulary, and the epic <strong>Full Scene Finale</strong> before the roleplay.
+                    </p>
+                    </GlassCard>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <GlassCard className="border-white/5 border-t-4 border-t-[#0ea5e9]">
+                        <h3 className="text-lg font-bold text-white mb-2">Corporate RPG Battle</h3>
+                        <p className="text-slate-400">Slide 11 features a turn-based RPG. Students must answer A2 grammar questions correctly to cast "spells" like 'Transfer Call' or 'Stapler Throw'.</p>
+                    </GlassCard>
+                    <GlassCard className="border-white/5 border-t-4 border-t-emerald-500">
+                        <h3 className="text-lg font-bold text-white mb-2">Secret HUD</h3>
+                        <p className="text-slate-400">Click the <Icon name="eye" size={16} className="inline mb-1"/> icon at the top right to reveal hidden pedagogical tips on each slide.</p>
+                    </GlassCard>
+                    </div>
+                </div>
+                <div className="bg-[#1e293b] border border-white/10 rounded-3xl p-8 flex flex-col justify-center text-center shadow-2xl">
+                    <div className="w-24 h-24 bg-[#0ea5e9]/10 rounded-full flex items-center justify-center mx-auto mb-6 border border-[#0ea5e9]/30">
+                    <IconReg name="circle-play" size={48} className="text-[#0ea5e9]" />
+                    </div>
+                    <h3 className="text-3xl font-black text-white mb-2">Ready to broadcast?</h3>
+                    <p className="text-slate-400 mb-8">Share your screen, hide your bookmarks, and prepare for immersion.</p>
+                    <Button primary onClick={startLesson} className="w-full py-5 text-xl uppercase tracking-widest">Initiate Engine</Button>
+                    <Button variant="netflix-dark" onClick={toggleFs} className="w-full mt-4 py-3 text-sm uppercase tracking-widest text-slate-400">
+                        <Icon name={isFs ? "compress" : "expand"} size={16} /> {isFs ? "Exit Fullscreen" : "Enter Fullscreen"}
+                    </Button>
+                </div>
+                </div>
+            </div>
+        );
+
+        const CoverSlide = ({ nextSlide }) => (
+            <div className="relative w-full h-full flex flex-col items-center justify-center text-center p-8 bg-[#0f172a]">
+                <div className="absolute inset-0 z-0 bg-cover bg-center opacity-40 mix-blend-luminosity mask-image-gradient" style={{ backgroundImage: `url(${BG_COVER})` }}></div>
+                <div className="absolute inset-0 bg-gradient-to-t from-[#0f172a] via-transparent to-transparent z-0"></div>
+                <div className="z-10 flex flex-col items-center justify-center mt-20 w-full max-w-6xl mx-auto">
+                <div className="flex items-center gap-3 mb-6">
+                    <div className="w-10 h-10 bg-[#0ea5e9] text-white font-black text-2xl flex items-center justify-center shadow-[0_0_20px_rgba(14,165,233,0.5)]">W</div>
+                    <span className="text-slate-300 font-bold tracking-[0.3em] text-sm uppercase">Interactive Experience</span>
+                </div>
+                <h1 className="text-7xl md:text-9xl font-black text-white mb-2 drop-shadow-2xl tracking-tighter uppercase" style={{fontFamily: "'Arial Black', Impact, sans-serif"}}>THE OFFICE</h1>
+                <h2 className="text-3xl md:text-5xl text-[#38bdf8] font-black italic mb-10 tracking-wide uppercase">The Sleepy Boss</h2>
+                <div className="flex flex-wrap items-center justify-center gap-4 text-sm font-bold mb-12">
+                    <span className="text-green-500 text-lg">99% Match</span>
+                    <span className="bg-white/10 border border-white/20 text-white px-3 py-1 rounded-md">A2 PRE-INTERMEDIATE</span>
+                    <span className="flex items-center gap-1 text-white"><Icon name="building" size={16}/> Workplace Comedy</span>
+                    <span className="bg-transparent border border-white/30 text-slate-300 px-3 py-1 rounded-md">HD</span>
+                </div>
+                <div className="flex flex-wrap items-center justify-center gap-4 text-white font-black tracking-widest text-sm md:text-base mb-12 uppercase">
+                    <span>PAST SIMPLE</span><div className="w-2 h-2 rounded-full bg-[#0ea5e9]"></div>
+                    <span>IRREGULAR VERBS</span><div className="w-2 h-2 rounded-full bg-[#0ea5e9]"></div>
+                    <span>CORPORATE VOCAB</span>
+                </div>
+                <div className="flex flex-col sm:flex-row gap-4 w-full justify-center max-w-xl">
+                    <Button variant="netflix-white" onClick={nextSlide} className="flex-1 py-4 text-lg uppercase"><Icon name="play" size={24} /> Watch Lesson</Button>
+                    <Button variant="netflix-dark" className="flex-1 py-4 text-lg uppercase"><Icon name="plus" size={24} /> My Homework</Button>
+                </div>
+                </div>
+            </div>
+        );
+
+        const VocabFocusSlide = ({ word, emoji, definition, followUp, starters }) => {
+            const [revealed, setRevealed] = useState(false);
+
+            return (
+                <div className="flex flex-col items-center justify-center h-full w-full max-w-5xl mx-auto p-4 md:p-8 animate-fadeIn relative z-10 text-center">
+                    <div className="bg-[#0ea5e9]/20 text-[#0ea5e9] border border-[#0ea5e9]/30 px-4 py-1 rounded-full text-sm font-bold tracking-widest mb-8 flex items-center gap-2 uppercase shadow-lg mx-auto w-max">
+                        <Icon name="book-open" size={16}/> Key Vocabulary
+                    </div>
+                    
+                    <div className="w-full max-w-4xl mx-auto flex flex-col items-center">
+                        <div className="w-full bg-[#1e293b]/90 backdrop-blur-2xl border border-white/10 rounded-3xl p-8 md:p-12 text-center shadow-[0_20px_50px_rgba(0,0,0,0.5)] mb-8 transform transition-all duration-700">
+                            <div className="text-8xl mb-6">{emoji}</div>
+                            <h2 className="text-6xl md:text-7xl font-black text-white mb-4 uppercase tracking-tighter" style={{fontFamily: "'Arial Black', Impact, sans-serif"}}>{word}</h2>
+                            <p className="text-2xl text-slate-400 font-medium max-w-2xl mx-auto">{definition}</p>
+                        </div>
+
+                        {!revealed ? (
+                            <Button variant="netflix-white" onClick={() => setRevealed(true)} className="px-10 py-4 text-xl uppercase tracking-wider shadow-2xl mx-auto">
+                            <IconReg name="comment-dots" size={24} /> Reveal Discussion
+                            </Button>
+                        ) : (
+                            <div className="w-full bg-gradient-to-br from-[#1e293b] to-[#0f172a] border border-white/10 rounded-3xl p-8 text-center animate-slideDown shadow-2xl">
+                            <p className="text-slate-500 font-bold uppercase tracking-widest text-sm mb-4">Speak Up</p>
+                            <p className="text-3xl text-white font-medium mb-8">"{followUp}"</p>
+                            
+                            {starters && (
+                                <div className="flex flex-wrap justify-center gap-4">
+                                {starters.map((starter, i) => (
+                                    <button key={i} className="px-6 py-3 bg-[#334155] hover:bg-[#0ea5e9] hover:scale-105 transition-all duration-300 border border-white/5 rounded-full text-white font-bold text-lg shadow-lg">
+                                    {starter}
+                                    </button>
+                                ))}
+                                </div>
+                            )}
+                            </div>
+                        )}
+                    </div>
+                </div>
+            );
+        };
+
+        const DiscussionSlide = ({ question, hint }) => (
+            <div className="flex flex-col items-center justify-center h-full w-full max-w-5xl mx-auto p-8 animate-fadeIn text-center">
+                <div className="bg-emerald-600/20 text-emerald-400 px-4 py-1 rounded-full text-sm font-bold tracking-widest mb-8 flex items-center gap-2 uppercase">
+                <IconReg name="comment-dots" size={16}/> Let's Talk
+                </div>
+                <h2 className="text-5xl md:text-6xl font-black mb-12 text-white leading-tight uppercase tracking-tight">{question}</h2>
+                <GlassCard className="border-emerald-500/30 bg-emerald-900/10 inline-block px-12 py-6">
+                <p className="text-emerald-400 font-bold uppercase tracking-widest text-sm mb-2">Speak Up</p>
+                <p className="text-2xl text-slate-300 font-medium">{hint}</p>
+                </GlassCard>
+            </div>
+        );
+
+        const DilemmaSlide = ({ title = "The Dilemma", question, options, bgImage, onWin }) => {
+            const [selected, setSelected] = useState(null);
+
+            return (
+                <div className="flex flex-col items-center justify-center h-full w-full max-w-6xl mx-auto p-8 animate-fadeIn relative text-center">
+                <div className="absolute inset-0 z-0 bg-cover bg-center opacity-30 mix-blend-luminosity rounded-3xl overflow-hidden" style={{ backgroundImage: `url(${bgImage})` }}></div>
+                <div className="absolute inset-0 bg-gradient-to-t from-[#0f172a] via-[#0f172a]/80 to-transparent z-0"></div>
+                
+                <div className="z-10 w-full flex flex-col items-center justify-center">
+                    <h2 className="text-5xl md:text-7xl font-black mb-4 text-white uppercase tracking-tighter" style={{fontFamily: "'Arial Black', Impact, sans-serif"}}>{title}</h2>
+                    <p className="text-2xl text-slate-300 mb-10 font-medium max-w-4xl mx-auto">{question}</p>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-5xl mx-auto mb-10 items-stretch">
+                    {options.map((opt, i) => (
+                        <div 
+                        key={i}
+                        onClick={() => { setSelected(i); onWin(100); }}
+                        className={`relative overflow-hidden cursor-pointer rounded-2xl border-2 transition-all duration-500 aspect-video flex flex-col justify-end p-6 text-left group
+                            ${selected === i ? 'border-[#0ea5e9] scale-105 shadow-[0_0_30px_rgba(14,165,233,0.4)]' : 'border-white/10 hover:border-white/40 hover:scale-105 bg-[#1e293b]/80 backdrop-blur-md'}`}
+                        >
+                        <div className={`absolute inset-0 bg-gradient-to-t transition-opacity ${selected === i ? 'from-[#0ea5e9]/80 to-transparent' : 'from-black/80 to-transparent opacity-0 group-hover:opacity-100'}`}></div>
+                        <div className="relative z-10">
+                            {selected === i && <IconReg name="circle-check" size={32} className="text-white mb-2" />}
+                            <h3 className="text-3xl font-black text-white mb-1 uppercase tracking-tight">{opt.text}</h3>
+                            <p className="text-slate-300 font-medium">{opt.sub}</p>
+                        </div>
+                        </div>
+                    ))}
+                    </div>
+
+                    <div className="bg-transparent mt-4 inline-block mx-auto text-center w-full">
+                    <p className="text-slate-500 uppercase tracking-widest text-xs font-bold mb-4 flex items-center justify-center gap-2"><IconReg name="comment-dots" size={16}/> Speaking Starters</p>
+                    <div className="flex flex-wrap justify-center gap-4">
+                        <button className="px-6 py-3 bg-[#1e293b] hover:bg-white hover:text-slate-900 border border-white/20 rounded-full font-bold transition-all shadow-lg text-slate-300">"If I were in this situation..."</button>
+                        <button className="px-6 py-3 bg-[#1e293b] hover:bg-white hover:text-slate-900 border border-white/20 rounded-full font-bold transition-all shadow-lg text-slate-300">"I strongly believe that..."</button>
+                        <button className="px-6 py-3 bg-[#1e293b] hover:bg-white hover:text-slate-900 border border-white/20 rounded-full font-bold transition-all shadow-lg text-slate-300">"To be honest, I'd..."</button>
+                    </div>
+                    </div>
+                </div>
+                </div>
+            );
+        };
+
+        const VideoSlide = ({ title, start, end, mission, isCut = false }) => {
+            const containerRef = useRef(null);
+            const [isFullscreen, setIsFullscreen] = useState(false);
+
+            useEffect(() => {
+                const onChange = () => setIsFullscreen(!!document.fullscreenElement);
+                document.addEventListener('fullscreenchange', onChange);
+                return () => document.removeEventListener('fullscreenchange', onChange);
+            }, []);
+
+            const toggleFs = async () => {
+                try {
+                    if(!document.fullscreenElement && !isFullscreen) {
+                        if (containerRef.current?.requestFullscreen) {
+                            await containerRef.current.requestFullscreen();
+                        } else {
+                            setIsFullscreen(true);
+                        }
+                    } else {
+                        if (document.exitFullscreen && document.fullscreenElement) {
+                            await document.exitFullscreen();
+                        } else {
+                            setIsFullscreen(false);
+                        }
+                    }
+                } catch(e) {
+                    console.warn("Fullscreen permission denied.", e);
+                    setIsFullscreen(!isFullscreen);
+                }
+            };
+
+            const videoSrc = `https://www.youtube.com/embed/${YOUTUBE_ID}?start=${start}${end ? '&end='+end : ''}&rel=0&modestbranding=1&showinfo=0&autoplay=${isCut ? '1' : '0'}`;
+
+            return (
+                <div className="flex flex-col items-center justify-center h-full w-full max-w-5xl mx-auto p-8 animate-fadeIn text-center">
+                    <div className="w-full flex justify-between items-end mb-4 max-w-5xl mx-auto">
+                        <div className="text-left">
+                            <h2 className="text-3xl font-black text-white uppercase tracking-tight">{title}</h2>
+                            {isCut && <p className="text-[#0ea5e9] font-mono mt-1 text-sm bg-blue-900/30 px-2 py-1 rounded inline-block font-bold">TARGET CUT: {start}s {end ? `- ${end}s` : ''}</p>}
+                        </div>
+                        {mission && (
+                            <div className="bg-blue-600/20 border border-[#0ea5e9] text-blue-100 px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 animate-pulse uppercase tracking-wide">
+                            <Icon name="circle-exclamation" size={16} className="text-[#0ea5e9]"/> MISSION: {mission}
+                            </div>
+                        )}
+                    </div>
+                    <div ref={containerRef} className={`w-full max-w-5xl mx-auto bg-black rounded-2xl overflow-hidden shadow-2xl border border-white/10 relative group transition-all duration-300 
+                        ${isFullscreen && !document.fullscreenElement ? 'fixed inset-0 z-[9999] rounded-none border-none flex items-center justify-center max-w-none' : ''} 
+                        ${isCut && !isFullscreen ? 'aspect-[21/9]' : 'aspect-video'}`}>
+                        
+                        <iframe className={`absolute ${isFullscreen && !document.fullscreenElement ? 'w-full h-full max-w-[177vh]' : 'w-full h-full'}`} src={videoSrc} frameBorder="0" allow="autoplay; encrypted-media" allowFullScreen></iframe>
+                        
+                        <button onClick={toggleFs} className="absolute top-4 right-4 bg-black/80 hover:bg-[#0ea5e9] text-white px-4 py-2 rounded-xl transition-all z-10 flex items-center gap-2 backdrop-blur-md border border-white/20 shadow-2xl">
+                            <Icon name={isFullscreen ? "compress" : "expand"} size={16} />
+                            <span className="font-bold uppercase tracking-widest text-xs hidden sm:block">{isFullscreen ? "Exit" : "Fullscreen"}</span>
+                        </button>
+                    </div>
+                </div>
+            );
+        };
+
+        const SpotifyScriptSlide = ({ title, scriptLines }) => {
+            const [activeIndex, setActiveIndex] = useState(null);
+
+            return (
+                <div className="flex flex-col md:flex-row h-full w-full max-w-7xl mx-auto p-8 gap-12 animate-fadeIn items-center relative">
+                <div className="absolute inset-0 bg-[#0f172a]/90 backdrop-blur-2xl z-0 rounded-3xl shadow-2xl"></div>
+                
+                <div className="flex-1 w-full h-full flex flex-col justify-center relative z-10 overflow-hidden pl-8">
+                    <div className="mb-8">
+                    <h2 className="text-4xl font-black text-white uppercase tracking-tight mb-2">{title}</h2>
+                    <p className="text-slate-400 flex items-center gap-2"><Icon name="book-open" size={18}/> Tap a script line to reveal its secrets.</p>
+                    </div>
+                    <div className="space-y-6 max-h-[60vh] overflow-y-auto pr-4 custom-scrollbar pb-20">
+                    {scriptLines.map((line, idx) => (
+                        <div 
+                        key={idx}
+                        onClick={() => setActiveIndex(idx)}
+                        className={`cursor-pointer transition-all duration-300 transform 
+                            ${activeIndex === idx 
+                            ? 'text-white text-4xl md:text-5xl font-black scale-100' 
+                            : 'text-slate-500 hover:text-slate-400 text-3xl md:text-4xl font-bold scale-95 origin-left'
+                            }`}
+                        >
+                        {line.text}
+                        </div>
+                    ))}
+                    </div>
+                </div>
+
+                <div className="w-full md:w-[450px] transition-all duration-500 z-10 pr-8">
+                    {activeIndex !== null ? (
+                    <div className="bg-[#1e293b] border border-white/10 rounded-[2rem] p-6 animate-slideInRight h-full flex flex-col justify-center shadow-2xl">
+                        
+                        <div className="flex flex-col items-center mb-6 text-center">
+                        <span className="bg-[#0ea5e9] text-white text-xs font-bold px-3 py-1.5 rounded-md uppercase tracking-wider mb-4 shadow-md">Target Focus</span>
+                        <h3 className="text-4xl font-black text-white capitalize leading-tight">{scriptLines[activeIndex].focus.word}</h3>
+                        </div>
+                        
+                        <div className="bg-[#0f172a] rounded-xl p-5 mb-4 shadow-inner">
+                        <p className="text-[#38bdf8] text-xs font-bold uppercase tracking-widest mb-2 flex items-center gap-2">
+                            <Icon name="circle-info" size={14}/> Meaning / Rule
+                        </p>
+                        <p className="text-white text-lg font-medium">{scriptLines[activeIndex].focus.meaning}</p>
+                        </div>
+
+                        {scriptLines[activeIndex].focus.grammarNote && (
+                        <div className="bg-[#1e293b] border-l-4 border-[#10b981] p-5 rounded-r-xl mb-4 shadow-inner">
+                            <p className="text-[#10b981] text-xs font-bold uppercase tracking-widest mb-2">Grammar Check</p>
+                            <p className="text-white text-md font-medium">{scriptLines[activeIndex].focus.grammarNote}</p>
+                        </div>
+                        )}
+
+                        {scriptLines[activeIndex].focus.followUp && (
+                        <div className="bg-[#1e293b] border-l-4 border-[#a855f7] p-5 rounded-r-xl shadow-inner mt-auto">
+                            <p className="text-[#a855f7] text-xs font-bold uppercase tracking-widest mb-2 flex items-center gap-2">
+                            <IconReg name="comment-dots" size={14}/> Follow-Up Question
+                            </p>
+                            <p className="text-white text-md font-bold italic">"{scriptLines[activeIndex].focus.followUp}"</p>
+                        </div>
+                        )}
+
+                    </div>
+                    ) : (
+                    <div className="h-[450px] border-2 border-dashed border-white/10 rounded-[2rem] flex flex-col items-center justify-center text-slate-500 p-8 text-center bg-[#1e293b]/50">
+                        <Icon name="magnifying-glass" size={48} className="mb-4 opacity-30" />
+                        <p className="text-lg font-medium">Select a script line to open the deep analysis.</p>
+                    </div>
+                    )}
+                </div>
+                </div>
+            );
+        };
+
+        const GrammarSlide = () => {
+            const [mode, setMode] = useState('present'); 
+            return (
+                <div className="flex flex-col items-center justify-center h-full p-8 w-full max-w-6xl mx-auto animate-fadeIn text-center">
+                <div className="bg-blue-600/20 text-blue-400 px-4 py-1 rounded-full text-sm font-bold tracking-widest mb-6 flex items-center justify-center gap-2 uppercase border border-blue-500/30 shadow-lg mx-auto w-max">
+                    <Icon name="crosshairs" size={16}/> Grammar Detective
+                </div>
+                <h2 className="text-5xl md:text-6xl font-black mb-12 text-white uppercase tracking-tight">Regular vs Irregular</h2>
+
+                <div className="flex flex-col md:flex-row w-full gap-8 items-stretch">
+                    <div className="flex-1 flex flex-col gap-4">
+                    <button onClick={() => setMode('present')} className={`flex-1 p-6 rounded-3xl border-2 transition-all duration-300 text-left flex flex-col justify-center gap-2 group ${mode === 'present' ? 'bg-blue-900/40 border-blue-500 shadow-[0_0_40px_rgba(59,130,246,0.2)]' : 'bg-[#1e293b] border-white/5 hover:border-white/20 hover:bg-[#334155]'}`}>
+                        <span className="text-blue-400 font-bold uppercase tracking-widest text-xs">Step 1</span>
+                        <span className="text-2xl font-black text-white uppercase tracking-tight group-hover:translate-x-2 transition-transform">Regular Verbs</span>
+                        <span className="text-slate-400 font-medium">They follow the rules. Just add -ED.</span>
+                    </button>
+
+                    <button onClick={() => setMode('past')} className={`flex-1 p-6 rounded-3xl border-2 transition-all duration-300 text-left flex flex-col justify-center gap-2 group ${mode === 'past' ? 'bg-red-900/40 border-[#e23636] shadow-[0_0_40px_rgba(226,54,54,0.2)]' : 'bg-[#1e293b] border-white/5 hover:border-white/20 hover:bg-[#334155]'}`}>
+                        <span className="text-[#e23636] font-bold uppercase tracking-widest text-xs">Step 2</span>
+                        <span className="text-2xl font-black text-white uppercase tracking-tight group-hover:translate-x-2 transition-transform">Irregular Verbs</span>
+                        <span className="text-slate-400 font-medium">They break the rules. You must memorize them.</span>
+                    </button>
+                    </div>
+
+                    <div className="flex-[1.5] relative">
+                    <GlassCard className="h-full flex flex-col justify-center text-left border-white/10 bg-[#1e293b]/90 p-10 shadow-2xl">
+                        {mode === 'present' ? (
+                        <div className="animate-slideInRight">
+                            <div className="flex items-center gap-4 mb-8">
+                            <div className="h-2 w-16 bg-blue-500 rounded-full animate-pulse shadow-[0_0_15px_rgba(59,130,246,0.8)]"></div>
+                            <span className="text-blue-500 font-black text-xl tracking-widest">REGULAR VERBS (+ED)</span>
+                            </div>
+                            <h3 className="text-4xl md:text-5xl font-black text-white leading-tight mb-8">
+                            "They <span className="text-blue-400 border-b-4 border-blue-500 pb-1">CHANGED</span> the computer clock."
+                            </h3>
+                            <div className="bg-blue-950/30 border-l-4 border-blue-500 p-6 rounded-r-2xl">
+                            <p className="text-slate-300 text-lg leading-relaxed">Most verbs in English are regular. To talk about the past, we simply add <strong>-ED</strong> (Work &rarr; Worked, Play &rarr; Played, Change &rarr; Changed).</p>
+                            </div>
+                        </div>
+                        ) : (
+                        <div className="animate-slideInRight">
+                            <div className="flex items-center gap-4 mb-8 relative">
+                            <div className="h-2 w-16 bg-[#e23636] rounded-full animate-pulse shadow-[0_0_20px_rgba(226,54,54,0.8)]"></div>
+                            <span className="text-[#e23636] font-black text-xl tracking-widest">IRREGULAR VERBS</span>
+                            </div>
+                            <h3 className="text-4xl md:text-5xl font-black text-white leading-tight mb-8">
+                            "He <span className="text-[#e23636] border-b-4 border-[#e23636] pb-1">ATE</span> an entire pie and <span className="text-[#e23636] border-b-4 border-[#e23636] pb-1">FELL</span> asleep."
+                            </h3>
+                            <div className="bg-red-950/30 border-l-4 border-[#e23636] p-6 rounded-r-2xl">
+                            <p className="text-slate-300 text-lg leading-relaxed">Some verbs change their form completely. There is no rule, you just have to learn them! (Eat &rarr; <strong>Ate</strong>, Fall &rarr; <strong>Fell</strong>, Have &rarr; <strong>Had</strong>).</p>
+                            </div>
+                        </div>
+                        )}
+                    </GlassCard>
+                    </div>
+                </div>
+            </div>
+            );
+        };
+
+        const QuizSlide = ({ question, options, answerIndex, explanation, followUp, onWin }) => {
+            const [selected, setSelected] = useState(null);
+            const isCorrect = selected === answerIndex;
+
+            const handleSelect = (idx) => {
+                if (selected !== null && isCorrect) return; 
+                setSelected(idx);
+                
+                if (idx === answerIndex) {
+                onWin(150);
+                } else {
+                setTimeout(() => setSelected(null), 1000);
+                }
+            };
+
+            return (
+                <div className="flex flex-col items-center justify-center h-full w-full p-8 text-center animate-fadeIn relative">
+                    <div className="bg-orange-500/20 text-orange-400 px-4 py-1 rounded-full text-sm font-bold tracking-widest mb-6 flex items-center justify-center gap-2 uppercase mx-auto w-max">
+                        <Icon name="gamepad" size={16}/> Knowledge Check
+                    </div>
+                    <h2 className="text-3xl md:text-5xl font-black text-white mb-10 uppercase tracking-tight leading-tight max-w-4xl mx-auto">{question}</h2>
+                    
+                    <div className="w-full max-w-4xl mx-auto flex flex-col items-stretch gap-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full transition-all duration-500">
+                            {options.map((opt, i) => {
+                            let stateClass = "bg-[#1e293b] border-white/5 hover:bg-[#334155]";
+                            if (selected !== null) {
+                                if (i === answerIndex) stateClass = "bg-green-600 border-green-500";
+                                else if (selected === i) stateClass = "bg-red-600 border-red-500 animate-shake";
+                                else stateClass = "opacity-50";
+                            }
+
+                            return (
+                                <button 
+                                key={i} 
+                                disabled={selected !== null && isCorrect}
+                                onClick={() => handleSelect(i)}
+                                className={`py-8 px-6 rounded-2xl border-2 font-bold text-xl md:text-2xl transition-all duration-300 text-white flex items-center justify-center ${stateClass}`}
+                                >
+                                {selected === i && i === answerIndex && <Icon name="check" size={24} className="mr-2" />}
+                                {selected === i && i !== answerIndex && <Icon name="xmark" size={24} className="mr-2" />}
+                                {opt}
+                                </button>
+                            )
+                            })}
+                        </div>
+
+                        {isCorrect && explanation && (
+                            <div className="w-full bg-gradient-to-br from-[#1e293b] to-[#0f172a] border border-green-500/30 rounded-3xl p-6 md:p-8 text-left animate-slideDown shadow-xl flex flex-col md:flex-row gap-8 items-stretch">
+                                <div className="flex-1 flex flex-col justify-center">
+                                    <p className="text-green-400 font-bold uppercase tracking-widest text-xs mb-3 flex items-center gap-2"><IconReg name="circle-check" size={14}/> Why is this correct?</p>
+                                    <p className="text-slate-200 text-base md:text-lg leading-relaxed">{explanation}</p>
+                                </div>
+                                
+                                <div className="w-px bg-white/10 hidden md:block"></div>
+                                <div className="h-px w-full bg-white/10 md:hidden"></div>
+                                
+                                <div className="flex-1 flex flex-col justify-center">
+                                    <p className="text-[#a855f7] font-bold uppercase tracking-widest text-xs mb-3 flex items-center gap-2"><IconReg name="comment-dots" size={14}/> Discussion</p>
+                                    <p className="text-white text-xl md:text-2xl font-bold italic leading-tight">"{followUp}"</p>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            );
+        };
+
+        const BuilderSlide = ({ words, onWin }) => {
+            const [available, setAvailable] = useState([...words].sort(() => Math.random() - 0.5));
+            const [built, setBuilt] = useState([]);
+            const [status, setStatus] = useState('playing');
+
+            const handleAdd = (w, originalIndex) => {
+                if(status !== 'playing') return;
+                const newBuilt = [...built, { word: w, id: Math.random() }]; 
+                setBuilt(newBuilt);
+                setAvailable(available.filter((_, i) => i !== originalIndex));
+
+                if (newBuilt.length === words.length) {
+                const builtSentence = newBuilt.map(item => item.word).join(" ");
+                const correctSentence = words.join(" ");
+                if (builtSentence === correctSentence) {
+                    setStatus('won');
+                    onWin(200);
+                } else {
+                    setStatus('lost');
+                    setTimeout(() => {
+                    setAvailable([...words].sort(() => Math.random() - 0.5));
+                    setBuilt([]);
+                    setStatus('playing');
+                    }, 1500);
+                }
+                }
+            };
+
+            const handleRemove = (itemToRemove, indexInBuilt) => {
+                if (status !== 'playing') return;
+                const newBuilt = built.filter((_, i) => i !== indexInBuilt);
+                setBuilt(newBuilt);
+                setAvailable([...available, itemToRemove.word]);
+            };
+
+            return (
+                <div className="flex flex-col items-center justify-center h-full w-full max-w-6xl mx-auto p-8 text-center animate-fadeIn relative">
+                <div className="absolute inset-0 z-0 bg-cover bg-center opacity-20 mix-blend-luminosity rounded-3xl overflow-hidden" style={{ backgroundImage: `url(${BG_OFFICE})` }}></div>
+                <div className="absolute inset-0 bg-[#0f172a]/80 z-0"></div>
+
+                <div className="relative z-10 w-full flex flex-col items-center justify-center">
+                    <div className="text-cyan-400 font-bold tracking-widest mb-4 flex items-center justify-center gap-2 uppercase">
+                    <Icon name="bolt" size={16}/> Syntax Protocol
+                    </div>
+                    <h2 className="text-5xl md:text-7xl font-black text-white mb-12 uppercase tracking-tighter" style={{fontFamily: "'Arial Black', Impact, sans-serif"}}>
+                    Rebuild the Memory
+                    </h2>
+                    
+                    <div className={`min-h-[160px] w-full max-w-5xl bg-[#1e293b]/80 border-2 border-dashed rounded-3xl mb-12 flex items-center justify-center gap-4 p-8 flex-wrap transition-all duration-500 shadow-[0_0_30px_rgba(14,165,233,0.3)]
+                    ${status === 'won' ? 'border-green-500 bg-green-900/20 shadow-[0_0_50px_rgba(34,197,94,0.3)]' : status === 'lost' ? 'border-[#e23636] bg-red-900/20 shadow-[0_0_50px_rgba(226,54,54,0.5)]' : 'border-white/10'}`}>
+                    {built.map((item, i) => (
+                        <div 
+                        key={item.id} 
+                        onClick={() => handleRemove(item, i)}
+                        className="bg-white text-slate-900 px-8 py-4 rounded-xl font-black text-2xl md:text-3xl shadow-xl animate-pop uppercase cursor-pointer hover:bg-blue-100 hover:scale-105 transition-transform"
+                        title="Click to remove"
+                        >
+                        {item.word}
+                        </div>
+                    ))}
+                    {built.length === 0 && <span className="text-slate-500 text-2xl font-bold uppercase tracking-widest">Tap words below to build the sentence...</span>}
+                    </div>
+
+                    <div className="flex flex-wrap gap-4 justify-center max-w-4xl">
+                    {available.map((w, i) => (
+                        <button 
+                        key={i} 
+                        onClick={() => handleAdd(w, i)} 
+                        className="bg-[#334155] hover:bg-[#475569] text-white px-8 py-4 rounded-xl font-bold text-2xl active:scale-95 transition-all hover:-translate-y-1 uppercase shadow-lg"
+                        >
+                        {w}
+                        </button>
+                    ))}
+                    </div>
+                </div>
+                </div>
+            );
+        };
+
+        const DebateSlide = ({ title, question, vocabHints }) => (
+            <div className="flex flex-col items-center justify-center h-full w-full max-w-6xl mx-auto p-8 animate-fadeIn">
+                <div className="bg-red-600/20 text-[#e23636] px-4 py-1 rounded-full text-sm font-bold tracking-widest mb-6 flex items-center gap-2 uppercase border border-[#e23636]/30 shadow-lg">
+                <IconReg name="comment-dots" size={16}/> The Verdict
+                </div>
+                <h2 className="text-5xl md:text-7xl font-black mb-8 text-white uppercase tracking-tighter text-center" style={{fontFamily: "'Arial Black', Impact, sans-serif"}}>{title}</h2>
+                <p className="text-2xl text-slate-300 font-medium text-center mb-12 max-w-4xl">{question}</p>
+                
+                <GlassCard className="w-full bg-[#1e293b]/90 border border-white/10 p-10 flex flex-col items-center shadow-2xl">
+                <p className="text-slate-400 uppercase tracking-widest text-sm font-bold mb-6 flex items-center gap-2"><Icon name="star" size={16} className="text-yellow-500"/> Challenge: Use these words in your answer</p>
+                <div className="flex flex-wrap justify-center gap-4">
+                    {vocabHints.map((hint, i) => (
+                    <span key={i} className="px-6 py-3 bg-[#334155] border border-white/5 rounded-xl text-white font-bold text-xl hover:border-[#e23636] hover:text-[#e23636] transition-all cursor-default shadow-lg">
+                        {hint}
+                    </span>
+                    ))}
+                </div>
+                </GlassCard>
+            </div>
+        );
+
+        const ShadowingIntroSlide = () => (
+            <div className="flex flex-col items-center justify-center h-full w-full max-w-6xl mx-auto p-8 animate-fadeIn">
+                <div className="bg-purple-600/20 text-purple-400 px-4 py-1 rounded-full text-sm font-bold tracking-widest mb-4 flex items-center gap-2 uppercase">
+                <Icon name="microphone" size={16}/> Fluency Protocol
+                </div>
+                <h2 className="text-6xl font-black mb-4 text-white text-center uppercase tracking-tight">The Shadowing Method</h2>
+                <p className="text-2xl text-slate-400 mb-16 text-center max-w-3xl">To speak like a native, you must practice muscle memory. Stop thinking. Start imitating.</p>
+                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full">
+                <GlassCard className="text-center py-12 border-t-4 border-t-blue-500 bg-[#1e293b]/90">
+                    <Icon name="headphones" size={56} className="mx-auto text-blue-400 mb-6" />
+                    <h3 className="text-3xl font-black text-white mb-4 uppercase">1. Listen</h3>
+                    <p className="text-slate-400 text-lg">Focus entirely on the rhythm, intonation, and connected speech.</p>
+                </GlassCard>
+                <GlassCard className="text-center py-12 border-t-4 border-t-yellow-500 bg-[#1e293b]/90">
+                    <IconReg name="comment-dots" size={56} className="mx-auto text-yellow-400 mb-6" />
+                    <h3 className="text-3xl font-black text-white mb-4 uppercase">2. Mumble</h3>
+                    <p className="text-slate-400 text-lg">Play the audio and whisper along. Match the exact speed.</p>
+                </GlassCard>
+                <GlassCard className="text-center py-12 border-t-4 border-t-purple-500 bg-purple-900/20">
+                    <Icon name="microphone" size={56} className="mx-auto text-purple-400 mb-6" />
+                    <h3 className="text-3xl font-black text-white mb-4 uppercase">3. Perform</h3>
+                    <p className="text-slate-400 text-lg">Speak out loud at the <strong>exact same time</strong> as the actor.</p>
+                </GlassCard>
+                </div>
+            </div>
+        );
+
+        const ShadowingStudioSlide = ({ title, phrase, connectedSpeech, start, end, onComplete }) => {
+            const [phase, setPhase] = useState(1);
+            const [isPerforming, setIsPerforming] = useState(false);
+            const containerRef = useRef(null);
+            const [isFullscreen, setIsFullscreen] = useState(false);
+
+            useEffect(() => {
+                const onChange = () => setIsFullscreen(!!document.fullscreenElement);
+                document.addEventListener('fullscreenchange', onChange);
+                return () => document.removeEventListener('fullscreenchange', onChange);
+            }, []);
+
+            const toggleFs = async () => {
+                try {
+                    if(!document.fullscreenElement && !isFullscreen) {
+                        if (containerRef.current?.requestFullscreen) {
+                            await containerRef.current.requestFullscreen();
+                        } else {
+                            setIsFullscreen(true);
+                        }
+                    } else {
+                        if (document.exitFullscreen && document.fullscreenElement) {
+                            await document.exitFullscreen();
+                        } else {
+                            setIsFullscreen(false);
+                        }
+                    }
+                } catch(e) {
+                    console.warn("Fullscreen permission denied.", e);
+                    setIsFullscreen(!isFullscreen);
+                }
+            };
+
+            const handlePerform = () => {
+                setIsPerforming(true);
+                setTimeout(() => {
+                setIsPerforming(false);
+                setPhase(4); 
+                onComplete(300);
+                }, 4000); 
+            };
+
+            const videoSrc = `https://www.youtube.com/embed/${YOUTUBE_ID}?start=${start || 0}${end ? '&end='+end : ''}&rel=0&modestbranding=1&showinfo=0`;
+
+            return (
+                <div className="flex flex-col items-center justify-center h-full w-full max-w-7xl mx-auto p-8 animate-fadeIn text-center">
+                <div className="bg-purple-600/20 text-purple-400 px-4 py-1 rounded-full text-sm font-bold tracking-widest mb-6 border border-purple-500/30 flex items-center justify-center gap-2 uppercase mx-auto w-max">
+                    <Icon name="microphone" size={16}/> Shadowing Studio
+                </div>
+                <h2 className="text-4xl md:text-5xl font-black text-white mb-8 uppercase tracking-tight">{title}</h2>
+                
+                <div className="flex flex-col md:flex-row w-full gap-8 items-stretch mb-8 h-full max-h-[500px]">
+                    <div ref={containerRef} className={`w-full md:w-1/2 bg-black overflow-hidden shadow-2xl border-2 border-purple-500/30 relative group flex items-center justify-center transition-all duration-300 ${isFullscreen && !document.fullscreenElement ? 'fixed inset-0 z-[9999] w-full h-full md:w-full border-none rounded-none' : 'rounded-3xl'}`}>
+                        <div className="w-full aspect-video relative mx-auto">
+                            <iframe className="absolute w-full h-full" src={videoSrc} frameBorder="0" allow="autoplay; encrypted-media" allowFullScreen></iframe>
+                        </div>
+                        <button onClick={toggleFs} className="absolute top-4 right-4 bg-black/80 hover:bg-[#0ea5e9] text-white px-4 py-2 rounded-xl transition-all z-10 flex items-center gap-2 backdrop-blur-md border border-white/20 shadow-2xl">
+                            <Icon name={isFullscreen ? "compress" : "expand"} size={16} />
+                            <span className="font-bold uppercase tracking-widest text-xs hidden sm:block">{isFullscreen ? "Exit" : "Fullscreen"}</span>
+                        </button>
+                    </div>
+
+                    <div className="w-full md:w-1/2 flex flex-col justify-center gap-6">
+                        <GlassCard className={`w-full text-center py-12 flex flex-col justify-center flex-1 transition-all duration-500 border-2 ${isPerforming ? 'border-purple-500 shadow-[0_0_50px_rgba(168,85,247,0.4)] scale-[1.02]' : 'border-white/5'}`}>
+                            <h3 className={`text-3xl md:text-5xl font-black mb-6 uppercase tracking-tighter transition-colors ${isPerforming ? 'text-white' : 'text-slate-300'}`}>"{phrase}"</h3>
+                            <p className="text-xl text-purple-400 font-mono bg-[#0f172a] inline-block px-6 py-3 rounded-2xl border border-purple-500/30 font-bold mx-auto w-max">
+                            Sounds like: {connectedSpeech}
+                            </p>
+                        </GlassCard>
+
+                        <div className="grid grid-cols-3 gap-4 w-full">
+                            <Button onClick={() => setPhase(2)} className={`py-4 text-sm md:text-base ${phase >= 1 ? 'border-purple-500/50 bg-purple-900/30' : 'bg-[#1e293b]'}`}>
+                                <Icon name="volume-high" size={20} /> 1. MUMBLE
+                            </Button>
+                            <Button onClick={() => setPhase(3)} disabled={phase < 2} className={`py-4 text-sm md:text-base ${phase >= 2 ? 'border-purple-500/50 bg-purple-900/30' : 'bg-[#1e293b]'}`}>
+                                <Icon name="bolt" size={20} /> 2. SHADOW
+                            </Button>
+                            <Button onClick={handlePerform} disabled={phase < 3 || isPerforming || phase === 4} primary={phase === 3} className={`py-4 text-sm md:text-base ${isPerforming ? 'bg-purple-600 animate-pulse' : ''} ${phase === 4 ? '!bg-green-600' : ''}`}>
+                                {isPerforming ? <><Icon name="microphone" size={20} className="animate-bounce" /> GO!</> : phase === 4 ? <><Icon name="star" size={20} /> NATIVE!</> : <><Icon name="microphone" size={20} /> 3. SOLO</>}
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+                </div>
+            );
+        };
+
+        const MatchPairsSlide = ({ pairs, onWin }) => {
+            const [selectedLeft, setSelectedLeft] = useState(null);
+            const [selectedRight, setSelectedRight] = useState(null);
+            const [matched, setMatched] = useState([]);
+            
+            const leftCol = pairs.map((p, i) => ({ id: i, text: p.left }));
+            const rightIndices = [3, 0, 2, 1]; 
+            const rightCol = rightIndices.map(i => ({ id: i, text: pairs[i].right }));
+
+            useEffect(() => {
+                if (selectedLeft !== null && selectedRight !== null) {
+                if (selectedLeft === selectedRight) {
+                    const newMatched = [...matched, selectedLeft];
+                    setMatched(newMatched);
+                    setSelectedLeft(null);
+                    setSelectedRight(null);
+                    if (newMatched.length === pairs.length) onWin(400);
+                } else {
+                    setTimeout(() => { setSelectedLeft(null); setSelectedRight(null); }, 800);
+                }
+                }
+            }, [selectedLeft, selectedRight]);
+
+            return (
+                <div className="flex flex-col items-center justify-center h-full w-full max-w-6xl mx-auto p-8 animate-fadeIn relative text-center">
+                <div className="bg-emerald-600/20 text-emerald-400 px-4 py-1 rounded-full text-sm font-bold mb-6 border border-emerald-500/30 flex items-center justify-center gap-2 uppercase tracking-widest mx-auto w-max">
+                    <Icon name="bolt" size={16}/> Neural Link Game
+                </div>
+                <h2 className="text-5xl font-black text-white mb-2 uppercase tracking-tight">Connect the Meaning</h2>
+                <p className="text-xl text-slate-400 mb-12">Tap the present verb on the left, then its past form on the right.</p>
+
+                <div className="flex w-full gap-8 md:gap-16">
+                    <div className="flex-1 flex flex-col gap-6">
+                    {leftCol.map(item => {
+                        const isMatched = matched.includes(item.id);
+                        const isSelected = selectedLeft === item.id;
+                        const isError = selectedLeft !== null && selectedRight !== null && selectedLeft === item.id && selectedLeft !== selectedRight;
+                        return (
+                        <GlassCard key={`l-${item.id}`} onClick={() => !isMatched && setSelectedLeft(item.id)}
+                            className={`py-8 text-center font-black text-2xl uppercase tracking-wide transition-all duration-300 bg-[#1e293b] border-white/5
+                            ${isMatched ? 'opacity-0 scale-90 pointer-events-none' : ''}
+                            ${isSelected ? 'bg-emerald-600/30 border-emerald-500 scale-105 shadow-[0_0_30px_rgba(16,185,129,0.3)]' : ''}
+                            ${isError ? 'bg-red-600/30 border-[#e23636] animate-shake' : 'hover:border-white/30'}`}>{item.text}</GlassCard>
+                        );
+                    })}
+                    </div>
+                    <div className="flex-1 flex flex-col gap-6">
+                    {rightCol.map(item => {
+                        const isMatched = matched.includes(item.id);
+                        const isSelected = selectedRight === item.id;
+                        const isError = selectedLeft !== null && selectedRight !== null && selectedRight === item.id && selectedLeft !== selectedRight;
+                        return (
+                        <GlassCard key={`r-${item.id}`} onClick={() => !isMatched && setSelectedRight(item.id)}
+                            className={`py-8 text-center font-medium text-xl text-slate-300 transition-all duration-300 bg-[#1e293b] border-white/5
+                            ${isMatched ? 'opacity-0 scale-90 pointer-events-none' : ''}
+                            ${isSelected ? 'bg-emerald-600/30 border-emerald-500 scale-105 shadow-[0_0_30px_rgba(16,185,129,0.3)]' : ''}
+                            ${isError ? 'bg-red-600/30 border-[#e23636] animate-shake' : 'hover:border-white/30'}`}>{item.text}</GlassCard>
+                        );
+                    })}
+                    </div>
+                </div>
+                
+                {matched.length === pairs.length && (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#0f172a]/90 backdrop-blur-md z-50 animate-fadeIn rounded-3xl">
+                    <Icon name="trophy" size={120} className="text-yellow-400 mb-8 animate-bounce drop-shadow-[0_0_50px_rgba(250,204,21,0.5)]" />
+                    <h2 className="text-7xl font-black text-white mb-4 uppercase tracking-tighter" style={{fontFamily: "'Arial Black', Impact, sans-serif"}}>SYSTEM CLEARED!</h2>
+                    <p className="text-emerald-400 font-black text-4xl">+400 XP</p>
+                    </div>
+                )}
+                </div>
+            );
+        };
+
+        const SpeakingArenaSlide = () => {
+            return (
+                <div className="flex flex-col items-center justify-center h-full w-full max-w-7xl mx-auto p-8 animate-fadeIn text-center">
+                <div className="bg-red-600/20 text-[#e23636] px-4 py-1 rounded-full text-sm font-bold mb-4 flex items-center justify-center gap-2 uppercase tracking-widest mx-auto w-max border border-[#e23636]/30">
+                    <Icon name="user-ninja" size={16}/> Final Challenge
+                </div>
+                <h2 className="text-6xl font-black text-white mb-2 uppercase tracking-tighter" style={{fontFamily: "'Arial Black', Impact, sans-serif"}}>The Speaking Arena</h2>
+                <p className="text-xl text-slate-400 mb-10 max-w-3xl mx-auto">Pair up. It's time for the ultimate office roleplay.</p>
+
+                <div className="flex flex-col md:flex-row w-full gap-8 items-stretch">
+                    <div className="flex-1 bg-gradient-to-br from-blue-900/40 to-[#1e293b] border-t-4 border-t-blue-500 rounded-3xl p-8 relative overflow-hidden shadow-2xl flex flex-col items-center justify-center text-center">
+                    <div className="absolute top-4 right-4 text-6xl opacity-50">💼</div>
+                    <h3 className="text-3xl font-black text-white mb-6 uppercase">Actor A: Jim</h3>
+                    <p className="text-slate-300 text-lg mb-6 leading-relaxed">
+                        You want to leave work early. You changed the clocks to trick your boss. Defend your plan!
+                    </p>
+                    <div className="bg-black/50 p-4 rounded-xl border border-white/5 w-full">
+                        <p className="text-blue-400 font-bold uppercase text-xs mb-2">Must use:</p>
+                        <ul className="text-white font-medium space-y-2">
+                        <li>"It is already 5 PM."</li>
+                        <li>"We need to be very quiet."</li>
+                        </ul>
+                    </div>
+                    </div>
+
+                    <div className="flex-none flex items-center justify-center font-black text-6xl italic text-slate-700">VS</div>
+
+                    <div className="flex-1 bg-gradient-to-br from-orange-900/40 to-[#1e293b] border-t-4 border-t-orange-500 rounded-3xl p-8 relative overflow-hidden shadow-2xl flex flex-col items-center justify-center text-center">
+                    <div className="absolute top-4 right-4 text-6xl opacity-50">🥱</div>
+                    <h3 className="text-3xl font-black text-white mb-6 uppercase">Actor B: Michael</h3>
+                    <p className="text-slate-300 text-lg mb-6 leading-relaxed">
+                        You just woke up. You are very confused about the time. Ask what happened.
+                    </p>
+                    <div className="bg-black/50 p-4 rounded-xl border border-white/5 w-full">
+                        <p className="text-orange-400 font-bold uppercase text-xs mb-2">Must use:</p>
+                        <ul className="text-white font-medium space-y-2">
+                        <li>"Did I fall asleep?"</li>
+                        <li>"What time is it?"</li>
+                        </ul>
+                    </div>
+                    </div>
+                </div>
+                </div>
+            );
+        };
+
+        // ==========================================
+        // 📚 EXACT 25-PAGE LESSON STRUCTURE (The Office A2)
+        // ==========================================
+
+        const SLIDES_DATA = [
+            { type: "intro", tip: "Welcome to The Office A2 Lesson. Start by asking students if they have ever fallen asleep at work or school." }, 
+            { type: "vocabFocus", word: "Fell asleep", emoji: "😴", definition: "To start sleeping. (Past form of 'fall asleep').", followUp: "Have you ever fallen asleep during a movie?", starters: ["Yes, last week!", "Only if it's boring", "Never"], tip: "Highlight that it's irregular (Fall -> Fell)." }, 
+            { type: "vocabFocus", word: "Change", emoji: "⌚", definition: "To make something different or alter it.", followUp: "When was the last time you changed your hairstyle?", starters: ["A long time ago", "Recently", "I never change it"], tip: "Highlight that it's regular (Change -> Changed)." }, 
+            { type: "vocabFocus", word: "Appointment", emoji: "📅", definition: "An arrangement to meet someone at a particular time and place.", followUp: "What is the worst appointment you ever had?", starters: ["The dentist", "A job interview", "A terrible date"], tip: "Make sure they pronounce it correctly (no 'e' sound at the end)." }, 
+            { type: "dilemma", title: "The Dilemma", question: "Your boss falls asleep at his desk at 3 PM. What do you do?", options: [{ text: "WAKE HIM UP", sub: "Be a good employee." }, { text: "CHANGE THE CLOCK", sub: "Trick him so you can leave early." }, { text: "GO HOME QUIETLY", sub: "Leave him there." }], bgImage: BG_OFFICE, tip: "Read the dilemma. Discuss what the students would realistically do." }, 
+            
+            // --- CHUNK 1: The Setup ---
+            { type: "video", title: "Part 1: The Setup", start: 0, end: 64, mission: "Watch the first part. What excuse does Dwight invent?", isCut: true, tip: "Play the first chunk. They will set up the prank." }, 
+            { type: "spotifyScript", title: "Script Analysis: PT 1", 
+                scriptLines: [
+                { text: "Michael had an entire family-sized chicken pot pie for lunch...", focus: { word: "Had", meaning: "Past tense of HAVE. Here it means 'ate'.", grammarNote: "In English, we say 'have lunch', so the past is 'had lunch'.", followUp: "What did you have for lunch yesterday?"} },
+                { text: "...and then he promptly fell asleep.", focus: { word: "Fell", meaning: "Past tense of FALL.", grammarNote: "To 'fall asleep' means to start sleeping.", followUp: "Are you a person who falls asleep quickly?"} },
+                { text: "I'm gonna go in there and change the computer.", focus: { word: "Change", meaning: "To make something different.", grammarNote: "This is a regular verb in the past: Changed.", followUp: "What is something you would like to change in your city?"} },
+                { text: "I have an appointment with the horse doctor.", focus: { word: "Horse Doctor", meaning: "A veterinarian for horses.", grammarNote: "A funny, unusual thing for an office worker to say.", followUp: "What is the strangest excuse you ever used to leave early?"} }
+                ], tip: "Review the key sentences from Part 1."
+            },
+            { type: "grammar", tip: "Toggle between Regular and Irregular verbs to explain the Past Simple." }, 
+            { type: "builder", words: ["Michael", "ate", "a", "pie", "and", "fell", "asleep."], tip: "Syntax practice. Have the class shout the correct order." }, 
+            
+            // --- CHUNK 2: The Escape ---
+            { type: "video", title: "Part 2: The Escape", start: 65, end: 106, mission: "What time is it on Michael's watch when he wakes up?", isCut: true, tip: "Play the final part of the prank." }, 
+            { type: "spotifyScript", title: "Script Analysis: PT 2", 
+                scriptLines: [
+                { text: "How that horse became a doctor, I don't know.", focus: { word: "Became", meaning: "Past tense of BECOME.", grammarNote: "Irregular verb. He is making a joke that the horse is the doctor.", followUp: "Do you like Dad Jokes?"} },
+                { text: "He's just a regular doctor who shoots your horse in the head...", focus: { word: "Shoots", meaning: "Fires a gun.", grammarNote: "Dark comedy element of The Office.", followUp: "Is dark humor popular in your country?"} }
+                ], tip: "Explain why the joke is funny (wordplay on 'horse doctor')."
+            },
+            { type: "shadowIntro", tip: "Explain the gym analogy: speaking requires muscle memory." }, 
+            { type: "shadowing", title: "Speak like Dwight", phrase: "I have an appointment with the horse doctor.", connectedSpeech: "I hav-an-appointment with the horse doctor.", start: 45, end: 49, tip: "Watch the video loop. Then use the buttons to Mumble, Shadow, and Perform." }, 
+            { type: "match", pairs: [
+                { left: "Eat", right: "Ate" },
+                { left: "Have", right: "Had" },
+                { left: "Fall", right: "Fell" },
+                { left: "Change", right: "Changed" }
+                ], tip: "Memory test! Match the base form to the past form." 
+            },
+            
+            // --- CONSOLIDATION & RPG ---
+            { type: "video", title: "The Final Watch", start: 0, end: 106, mission: "Watch the full scene and enjoy the comedy!", tip: "Let the full scene play. It brings all the pieces together." }, 
+            { type: "quiz", question: "What is the correct past tense of 'FALL'?", options: ["Falled", "Fell", "Fallen", "Fall"], answerIndex: 1, explanation: "Fall is an irregular verb. The past simple is 'Fell'.", followUp: "Did you fall down a lot when you were a kid?", tip: "A quick check." }, 
+            { type: "quiz", question: "What is an 'appointment'?", options: ["A type of pie.", "A scheduled meeting at a specific time.", "A broken clock.", "A funny joke."], answerIndex: 1, explanation: "An appointment is an arrangement to meet someone, usually professional (doctor, dentist, boss).", followUp: "Do you have any appointments this week?", tip: "Check vocabulary comprehension." }, 
+            { type: "discussion", question: "Have you ever used a crazy excuse to miss work or school?", hint: "Use Past Simple: 'I said that I had...'", tip: "Open the Whiteboard to type out their sentences live." },
+            
+            // --- BOSS FIGHT ---
+            { type: "rpg", tip: "O Boardgame: Corporate Battle. The Ultimate Test! Deixe os alunos escolherem a classe e lutarem contra o escritório!" },
+            
+            // --- OUTRO & ROLEPLAY ---
+            { type: "debate", title: "Office Pranks", question: "Is it okay to play pranks on your boss if he is lazy?", vocabHints: ["Promptly", "Appointment", "Change", "Fell asleep"], tip: "Encourage them to use the vocabulary boxes. Use the Timer tool for 60s per student." }, 
+            { type: "speakingArena", tip: "Put two students on the spot. Use the Timer tool to give them 60 seconds to act it out." }, 
+            { type: "end", tip: "Show the final XP. Tell them to click 'My Homework' on their student dashboard." } 
+        ];
+
+        // --- MAIN APPLICATION ---
+        function App() {
+            const [started, setStarted] = useState(false);
+            const [slideIdx, setSlideIdx] = useState(0);
+            const [xp, setXp] = useState(0);
+            const [hud, setHud] = useState(false);
+            const [completed, setCompleted] = useState(new Set());
+            const [isAppFullscreen, setIsAppFullscreen] = useState(false);
+
+            useEffect(() => {
+                const handleFsChange = () => setIsAppFullscreen(!!document.fullscreenElement);
+                document.addEventListener('fullscreenchange', handleFsChange);
+                return () => document.removeEventListener('fullscreenchange', handleFsChange);
+            }, []);
+
+            const toggleAppFullscreen = async () => {
+                try {
+                    if (!document.fullscreenElement && !isAppFullscreen) {
+                        if (document.documentElement.requestFullscreen) {
+                            await document.documentElement.requestFullscreen();
+                        } else {
+                            setIsAppFullscreen(true);
+                        }
+                    } else {
+                        if (document.exitFullscreen && document.fullscreenElement) {
+                            await document.exitFullscreen();
+                        } else {
+                            setIsAppFullscreen(false);
+                        }
+                    }
+                } catch (e) {
+                    console.warn("Fullscreen API not allowed here:", e);
+                    setIsAppFullscreen(!isAppFullscreen);
+                }
+            };
+
+            const addXp = (amount) => {
+                setXp(x => x + amount);
+                if (!completed.has(slideIdx) && amount !== 50) {
+                setCompleted(prev => new Set(prev).add(slideIdx));
+                }
+            };
+
+            const next = () => { if (slideIdx < SLIDES_DATA.length - 1) setSlideIdx(s => s + 1); };
+            const prev = () => { if (slideIdx > 0) setSlideIdx(s => s - 1); };
+
+            if (!started) {
+                return (
+                    <div className={`w-full bg-[#0f172a] font-sans overflow-hidden flex flex-col relative selection:bg-[#0ea5e9]/30 text-white ${isAppFullscreen && !document.fullscreenElement ? 'fixed inset-0 z-[9999] h-[100dvh] w-screen' : 'h-screen'}`}>
+                        <div className="fixed top-6 right-6 z-[60] flex items-center gap-3">
+                            <button onClick={toggleAppFullscreen} className={`w-14 h-14 rounded-full flex items-center justify-center transition-all shadow-2xl ${isAppFullscreen ? 'bg-[#1e293b]/80 text-[#0ea5e9] border-[#0ea5e9] shadow-[0_0_20px_rgba(14,165,233,0.3)]' : 'bg-[#1e293b]/80 backdrop-blur-md text-slate-400 border-white/10 hover:text-white hover:border-white/30 hover:scale-105'}`} title="Toggle Fullscreen">
+                                <Icon name={isAppFullscreen ? "compress" : "expand"} size={24} />
+                            </button>
+                        </div>
+                        <TeacherGuideSlide startLesson={() => setStarted(true)} toggleFs={toggleAppFullscreen} isFs={isAppFullscreen} />
+                    </div>
+                );
+            }
+
+            const current = SLIDES_DATA[slideIdx];
+
+            const renderSlide = () => {
+                switch (current.type) {
+                case "intro": return <CoverSlide nextSlide={next} />;
+                case "vocabFocus": return <VocabFocusSlide word={current.word} emoji={current.emoji} definition={current.definition} followUp={current.followUp} starters={current.starters} />;
+                case "discussion": return <DiscussionSlide question={current.question} hint={current.hint} />;
+                case "debate": return <DebateSlide title={current.title} question={current.question} vocabHints={current.vocabHints} />;
+                case "dilemma": return <DilemmaSlide title={current.title} question={current.question} options={current.options} bgImage={current.bgImage} onWin={addXp} />;
+                case "video": return <VideoSlide title={current.title} start={current.start} end={current.end} mission={current.mission} isCut={current.isCut} />;
+                case "spotifyScript": return <SpotifyScriptSlide title={current.title} scriptLines={current.scriptLines} />;
+                case "grammar": return <GrammarSlide />;
+                case "builder": return <BuilderSlide words={current.words} onWin={addXp} />;
+                case "quiz": return <QuizSlide question={current.question} options={current.options} answerIndex={current.answerIndex} explanation={current.explanation} followUp={current.followUp} onWin={addXp} />;
+                case "shadowIntro": return <ShadowingIntroSlide />;
+                case "shadowing": return <ShadowingStudioSlide title={current.title} phrase={current.phrase} connectedSpeech={current.connectedSpeech} start={current.start} end={current.end} onComplete={addXp} />;
+                case "match": return <MatchPairsSlide pairs={current.pairs} onWin={addXp} />;
+                case "speakingArena": return <SpeakingArenaSlide />;
+                case "rpg": return <OfficeBattleRPG addXp={addXp} onComplete={next} />;
+                case "end":
+                    return (
+                    <div className="flex flex-col items-center justify-center h-full w-full max-w-6xl mx-auto text-center p-8 animate-fadeIn">
+                        <Icon name="trophy" size={120} className="text-yellow-400 mb-8 drop-shadow-[0_0_50px_rgba(250,204,21,0.6)] animate-bounce" />
+                        <h1 className="text-7xl md:text-9xl font-black mb-6 text-white uppercase tracking-tighter" style={{fontFamily: "'Arial Black', Impact, sans-serif"}}>EPISODE COMPLETE</h1>
+                        <GlassCard className="mb-12 bg-[#0ea5e9]/10 border-[#0ea5e9]/30 px-20 py-10 inline-block shadow-[0_0_60px_rgba(14,165,233,0.15)]">
+                        <p className="text-[#0ea5e9] font-bold uppercase tracking-widest text-lg mb-2">Total XP Earned</p>
+                        <p className="text-8xl font-black text-white">{xp} XP</p>
+                        </GlassCard>
+                        <div className="flex items-center justify-center gap-6">
+                        <Button variant="netflix-white" className="px-10 py-5 text-xl uppercase tracking-wider">
+                            <Icon name="play" size={24} className="text-slate-900" /> Watch Next Episode
+                        </Button>
+                        <Button variant="netflix-dark" className="px-10 py-5 text-xl uppercase tracking-wider">
+                            <Icon name="plus" size={24} /> Access Homework
+                        </Button>
+                        </div>
+                    </div>
+                    );
+                default: return <div className="text-white text-2xl">Error loading module.</div>;
+                }
+            };
+
+            return (
+                <div className={`w-full bg-[#0f172a] font-sans overflow-hidden flex flex-col relative selection:bg-[#0ea5e9]/30 text-white ${isAppFullscreen && !document.fullscreenElement ? 'fixed inset-0 z-[9999] h-[100dvh] w-screen' : 'h-screen'}`}>
+                
+                <div className="fixed top-6 right-6 z-[60] flex items-center gap-3">
+                    {slideIdx > 0 && (
+                        <React.Fragment>
+                            <div className="flex items-center gap-2 bg-[#1e293b]/80 border border-white/10 px-5 h-14 rounded-full backdrop-blur-md shadow-lg mr-2">
+                                <Icon name="star" size={18} className="text-yellow-400" />
+                                <span className="font-bold text-yellow-400 text-lg">{xp} XP</span>
+                            </div>
+                            <button onClick={() => setHud(!hud)} className={`w-14 h-14 rounded-full border transition-all shadow-2xl flex items-center justify-center ${hud ? 'bg-[#0ea5e9] text-white border-transparent shadow-[0_0_20px_rgba(14,165,233,0.5)]' : 'bg-[#1e293b]/80 backdrop-blur-md text-slate-400 border-white/10 hover:text-white hover:border-white/30 hover:scale-105'}`} title="Toggle HUD">
+                                {hud ? <Icon name="eye" size={24} /> : <Icon name="eye-slash" size={24} />}
+                            </button>
+                        </React.Fragment>
+                    )}
+                    <button onClick={toggleAppFullscreen} className={`w-14 h-14 rounded-full border transition-all shadow-2xl flex items-center justify-center ${isAppFullscreen ? 'bg-[#1e293b]/80 text-[#0ea5e9] border-[#0ea5e9] shadow-[0_0_20px_rgba(14,165,233,0.3)]' : 'bg-[#1e293b]/80 backdrop-blur-md text-slate-400 border-white/10 hover:text-white hover:border-white/30 hover:scale-105'}`} title="Toggle Fullscreen">
+                        <Icon name={isAppFullscreen ? "compress" : "expand"} size={24} />
+                    </button>
+                </div>
+
+                {started && <TeacherTools addXp={addXp} />}
+
+                {/* Dynamic Background Image */}
+                {slideIdx > 0 && (
+                    <div 
+                    className="absolute inset-0 z-0 bg-cover bg-center opacity-10 mix-blend-luminosity transition-all duration-1000 scale-105" 
+                    style={{ backgroundImage: `url(${slideIdx > 13 ? BG_CLOCK : BG_OFFICE})` }} 
+                    />
+                )}
+                
+                {/* Top Header Navigation */}
+                {slideIdx > 0 && (
+                    <div className="z-30 w-full p-6 flex justify-between items-center bg-gradient-to-b from-[#0f172a] via-[#0f172a]/80 to-transparent absolute top-0 pointer-events-none">
+                    <h1 className="text-white font-black tracking-widest text-xl drop-shadow-md flex items-center gap-3 ml-24 pointer-events-auto">
+                        <div className="w-8 h-8 bg-[#0ea5e9] text-white flex items-center justify-center text-lg shadow-[0_0_15px_rgba(14,165,233,0.5)]">W</div>
+                        <span className="opacity-80 hidden md:block">WOLFFLIX</span>
+                    </h1>
+                    </div>
+                )}
+
+                {/* Teacher HUD Alert */}
+                {hud && current.tip && slideIdx > 0 && (
+                    <div className="absolute top-24 left-1/2 transform -translate-x-1/2 z-[40] bg-[#1e293b]/95 backdrop-blur-2xl border border-blue-500/50 text-blue-50 px-6 py-4 rounded-2xl shadow-2xl flex items-center justify-center text-center gap-4 w-[90%] max-w-2xl animate-slideInDown">
+                    <div className="bg-blue-600/20 p-2 rounded-full border border-blue-500/30"><Icon name="display" size={24} className="text-blue-400" /></div>
+                    <div>
+                        <p className="text-xs text-blue-400 font-bold uppercase tracking-widest mb-1">Director's Note</p>
+                        <p className="font-medium text-[15px]">{current.tip}</p>
+                    </div>
+                    </div>
+                )}
+
+                {/* Main Slide Renderer Area */}
+                <div className="flex-1 relative z-10 w-full h-full overflow-y-auto overflow-x-hidden pt-16 pb-24 flex items-center justify-center">
+                    {renderSlide()}
+                </div>
+
+                {/* Footer / Progression Controls */}
+                {slideIdx > 0 && (
+                    <div className="z-30 w-full bg-gradient-to-t from-[#0f172a] via-[#0f172a]/95 to-transparent p-6 absolute bottom-0 flex flex-col items-center">
+                    <div className="max-w-6xl w-full flex flex-col gap-5">
+                        <div className="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                        <div className="h-full bg-[#0ea5e9] transition-all duration-500 ease-out shadow-[0_0_10px_rgba(14,165,233,0.8)]" style={{ width: `${((slideIdx) / (SLIDES_DATA.length - 1)) * 100}%` }} />
+                        </div>
+                        
+                        <div className="flex justify-between items-center w-full relative">
+                        <Button onClick={prev} disabled={slideIdx === 0} className="px-4 py-2 bg-transparent hover:bg-white/5 border-none">
+                            <Icon name="arrow-left" size={18} /> BACK
+                        </Button>
+                        
+                        <div className="absolute left-1/2 transform -translate-x-1/2 text-slate-500 font-bold tracking-[0.2em] text-xs md:text-sm uppercase hidden sm:block">
+                            PAGE {slideIdx + 1} OF {SLIDES_DATA.length}
+                        </div>
+
+                        <Button onClick={next} variant="netflix-white" disabled={slideIdx === SLIDES_DATA.length - 1} className="px-8 py-2 border-none">
+                            NEXT <Icon name="arrow-right" size={18} className="text-slate-900" />
+                        </Button>
+                        </div>
+                    </div>
+                    </div>
+                )}
+            </div>
+            );
+        }
+        
+        // Initialize the React application
+        const rootElement = document.getElementById('root');
+        const root = ReactDOM.createRoot(rootElement);
+        root.render(<App />);
+
+    </script>
+</body>
+</html>
